@@ -38,6 +38,13 @@ body {
   font-family: var(--font-body);
 }
 
+/* Browsers default <button> to cursor: default, not pointer — fixed
+   globally here so every action button gets it, not class-by-class. */
+button:not(:disabled),
+[role='button']:not(:disabled) {
+  cursor: pointer;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

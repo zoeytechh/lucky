@@ -12,7 +12,8 @@ export function setAccessToken(token: string | null) {
 export async function apiFetch(path: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers)
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`)
-  if (init.body && !headers.has('Content-Type')) {
+  // Leave FormData bodies alone — the browser sets the multipart boundary.
+  if (init.body && !(init.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
 
@@ -28,4 +29,20 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
   }
 
   return res.json()
+}
+
+// The refresh endpoint rotates the token on every call (old one revoked,
+// new one issued), so two concurrent callers racing for it is a real bug,
+// not just a dev-mode StrictMode artifact: the second call always loses
+// against the first's rotation. Every caller shares one in-flight request
+// instead of each firing its own.
+let refreshInFlight: Promise<{ accessToken: string }> | null = null
+
+export function refreshSession(): Promise<{ accessToken: string }> {
+  if (!refreshInFlight) {
+    refreshInFlight = apiFetch('/api/auth/refresh', { method: 'POST' }).finally(() => {
+      refreshInFlight = null
+    })
+  }
+  return refreshInFlight
 }
