@@ -15,8 +15,8 @@ export default defineConfig({
         name: 'Lucky',
         short_name: 'Lucky',
         description: 'Enter the draw, win real cash.',
-        theme_color: '#0f6b4a',
-        background_color: '#ffffff',
+        theme_color: '#0b3d24',
+        background_color: '#0b3d24',
         display: 'standalone',
         start_url: '/',
         icons: [

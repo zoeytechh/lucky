@@ -1,9 +1,47 @@
 @import 'tailwindcss';
 
+/*
+  Lucky design tokens — "Owambe Jackpot" direction.
+  One committed dark world, no light-mode variant: a light-mode version of
+  a gold-on-deep-green celebration theme would undercut the premise, so
+  this is a deliberate single-theme product, not an oversight.
+*/
+@theme {
+  --color-ground: #0b3d24; /* app background */
+  --color-ground-raised: #10432b; /* card/section surfaces, one step up from ground */
+  --color-ground-raised-2: #154a31; /* a second step up, for nested/active surfaces */
+  --color-hairline: #1f5739; /* borders between ground-raised surfaces */
+
+  --color-ink: #f4efde; /* primary text on ground */
+  --color-ink-muted: #9fc9b1; /* secondary text, captions, labels */
+
+  --color-primary: #e8b63e; /* gold foil — brand, primary actions */
+  --color-primary-ink: #0b3d24; /* text sitting on top of primary */
+  --color-secondary: #ff8a7e; /* confetti coral — spent in ONE place at a time, not spread around */
+
+  --color-success: #7fd9a6; /* won / refunded */
+  --color-danger: #c9654f; /* lost — a muted rust, deliberately distinct from secondary coral */
+
+  --font-display: 'Anton', 'Arial Narrow', sans-serif;
+  --font-body:
+    'Nunito Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 }
 
 body {
   margin: 0;
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
