@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import App from './App.tsx'
 import './index.css'
 import { AuthProvider } from './lib/AuthContext'
+import { WalletProvider } from './lib/WalletContext'
 import Draw from './pages/Draw'
 import Leaderboard from './pages/Leaderboard'
 import Login from './pages/Login'
@@ -29,7 +30,9 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <RouterProvider router={router} />
+      <WalletProvider>
+        <RouterProvider router={router} />
+      </WalletProvider>
     </AuthProvider>
   </StrictMode>,
 )

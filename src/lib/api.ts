@@ -6,6 +6,26 @@ export function setAccessToken(token: string | null) {
   accessToken = token
 }
 
+/**
+ * Carries a machine-readable `code` alongside the human message, so UI
+ * can render tailored copy/icon/actions per error type (see ErrorAlert)
+ * instead of just dumping whatever string the server happened to send.
+ * `code: 'NETWORK_ERROR'` is synthesized here for a fetch that never
+ * reached the server at all — a different situation for the user than a
+ * request the server actively rejected, and worth telling apart.
+ */
+export class ApiError extends Error {
+  status: number
+  code?: string
+
+  constructor(message: string, status: number, code?: string) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.code = code
+  }
+}
+
 // Thin fetch wrapper. Auth routes/token-refresh logic lands alongside the
 // backend auth implementation (build-order step 1/2) — this is the shared
 // shape every later feature (draw, wallet, leaderboard) will call through.
@@ -17,15 +37,20 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
     headers.set('Content-Type', 'application/json')
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
-    ...init,
-    headers,
-    credentials: 'include', // sends the refresh-token cookie
-  })
+  let res: Response
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      ...init,
+      headers,
+      credentials: 'include', // sends the refresh-token cookie
+    })
+  } catch {
+    throw new ApiError('Could not reach the server. Check your connection and try again.', 0, 'NETWORK_ERROR')
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
-    throw new Error(body.message ?? `Request failed: ${res.status}`)
+    throw new ApiError(body.message ?? `Request failed: ${res.status}`, res.status, body.code)
   }
 
   return res.json()

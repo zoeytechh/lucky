@@ -1,14 +1,35 @@
-import { Link, Navigate, NavLink, Outlet } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { motion } from 'motion/react'
 import Loader from './components/Loader'
+import MobileMenu from './components/MobileMenu'
 import { useAuth } from './lib/AuthContext'
+import { formatNaira } from './lib/money'
+import { useWallet } from './lib/WalletContext'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `text-sm tracking-wide transition-colors ${
     isActive ? 'text-primary' : 'text-ink-muted hover:text-ink'
   }`
 
+function HamburgerIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path
+        d="M3 6h16M3 11h16M3 16h16"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 function App() {
   const { status, user } = useAuth()
+  const { balanceMinor } = useWallet()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const location = useLocation()
 
   if (status === 'loading') {
     return (
@@ -30,10 +51,18 @@ function App() {
     <div className="min-h-screen bg-ground font-body text-ink">
       <nav className="flex items-center justify-between border-b border-hairline bg-ground-raised px-5 py-3.5">
         <div className="flex items-center gap-6">
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            className="text-ink sm:hidden"
+            aria-label="Open menu"
+          >
+            <HamburgerIcon />
+          </button>
           <NavLink to="/" className="font-display text-lg tracking-wide text-primary">
             LUCKY
           </NavLink>
-          <div className="flex gap-5">
+          <div className="hidden gap-5 sm:flex">
             <NavLink to="/" end className={navLinkClass}>
               Draw
             </NavLink>
@@ -48,7 +77,9 @@ function App() {
         <div className="flex items-center gap-3">
           <div className="text-right leading-tight">
             <span className="block text-[10px] tracking-wider text-ink-muted">WALLET</span>
-            <span className="font-display text-sm tabular-nums text-ink">₦18,450</span>
+            <span className="font-display text-sm tabular-nums text-ink">
+              {balanceMinor === null ? '—' : formatNaira(balanceMinor)}
+            </span>
           </div>
           <Link
             to="/profile"
@@ -65,7 +96,17 @@ function App() {
           </Link>
         </div>
       </nav>
-      <Outlet />
+
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: 'easeOut' }}
+      >
+        <Outlet />
+      </motion.div>
     </div>
   )
 }

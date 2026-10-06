@@ -1,5 +1,7 @@
+import { AnimatePresence } from 'motion/react'
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ErrorAlert from '../components/ErrorAlert'
 import { useAuth } from '../lib/AuthContext'
 
 export default function Profile() {
@@ -9,7 +11,7 @@ export default function Profile() {
 
   const [fullName, setFullName] = useState(user?.fullName ?? '')
   const [preview, setPreview] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Error | null>(null)
   const [savingPhoto, setSavingPhoto] = useState(false)
   const [savingName, setSavingName] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -23,7 +25,7 @@ export default function Profile() {
     try {
       await uploadAvatar(file)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
+      setError(err instanceof Error ? err : new Error('Upload failed'))
     } finally {
       setSavingPhoto(false)
     }
@@ -38,7 +40,7 @@ export default function Profile() {
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save')
+      setError(err instanceof Error ? err : new Error('Could not save'))
     } finally {
       setSavingName(false)
     }
@@ -95,7 +97,13 @@ export default function Profile() {
           {user?.phoneNumber}
         </div>
 
-        {error && <p className="mt-3 text-xs text-danger">{error}</p>}
+        <AnimatePresence>
+          {error && (
+            <div className="mt-3">
+              <ErrorAlert error={error} />
+            </div>
+          )}
+        </AnimatePresence>
 
         <button
           type="submit"

@@ -1,5 +1,7 @@
+import { AnimatePresence } from 'motion/react'
 import { useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import ErrorAlert from '../components/ErrorAlert'
 import { useAuth } from '../lib/AuthContext'
 
 export default function Onboarding() {
@@ -9,7 +11,7 @@ export default function Onboarding() {
 
   const [preview, setPreview] = useState<string | null>(null)
   const [file, setFile] = useState<File | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Error | null>(null)
   const [busy, setBusy] = useState(false)
 
   // Guard clauses after every hook call — see the note in Login.tsx.
@@ -34,7 +36,7 @@ export default function Onboarding() {
       await uploadAvatar(file)
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
+      setError(err instanceof Error ? err : new Error('Upload failed'))
     } finally {
       setBusy(false)
     }
@@ -69,7 +71,13 @@ export default function Onboarding() {
           className="hidden"
         />
 
-        {error && <p className="mt-3 text-xs text-danger">{error}</p>}
+        <AnimatePresence>
+          {error && (
+            <div className="mt-3">
+              <ErrorAlert error={error} />
+            </div>
+          )}
+        </AnimatePresence>
 
         <button
           type="button"

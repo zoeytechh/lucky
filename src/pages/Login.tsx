@@ -1,5 +1,7 @@
+import { AnimatePresence } from 'motion/react'
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import ErrorAlert from '../components/ErrorAlert'
 import { useAuth } from '../lib/AuthContext'
 
 export default function Login() {
@@ -9,7 +11,7 @@ export default function Login() {
   const [step, setStep] = useState<'phone' | 'code'>('phone')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [code, setCode] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Error | null>(null)
   const [busy, setBusy] = useState(false)
 
   // Guard clauses come after every hook call — React requires hooks to run
@@ -30,7 +32,7 @@ export default function Login() {
       await requestOtp(phoneNumber)
       setStep('code')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(err instanceof Error ? err : new Error('Something went wrong'))
     } finally {
       setBusy(false)
     }
@@ -44,7 +46,7 @@ export default function Login() {
       await verifyOtp(phoneNumber, code)
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Incorrect code')
+      setError(err instanceof Error ? err : new Error('Incorrect code'))
     } finally {
       setBusy(false)
     }
@@ -68,7 +70,13 @@ export default function Login() {
               placeholder="080X XXX XXXX"
               className="mt-6 w-full rounded-lg border border-hairline bg-ground-raised px-4 py-3 text-center text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none"
             />
-            {error && <p className="mt-3 text-xs text-danger">{error}</p>}
+            <AnimatePresence>
+              {error && (
+                <div className="mt-3">
+                  <ErrorAlert error={error} />
+                </div>
+              )}
+            </AnimatePresence>
             <button
               type="submit"
               disabled={busy}
@@ -92,7 +100,13 @@ export default function Login() {
               placeholder="000000"
               className="mt-6 w-full rounded-lg border border-hairline bg-ground-raised px-4 py-3 text-center tracking-[0.3em] text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none"
             />
-            {error && <p className="mt-3 text-xs text-danger">{error}</p>}
+            <AnimatePresence>
+              {error && (
+                <div className="mt-3">
+                  <ErrorAlert error={error} />
+                </div>
+              )}
+            </AnimatePresence>
             <button
               type="submit"
               disabled={busy || code.length !== 6}
