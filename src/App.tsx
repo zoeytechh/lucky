@@ -3,6 +3,7 @@ import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'motion/react'
 import Loader from './components/Loader'
 import MobileMenu from './components/MobileMenu'
+import { WalletIcon } from './components/icons'
 import { useAuth } from './lib/AuthContext'
 import { formatNaira } from './lib/money'
 import { useWallet } from './lib/WalletContext'
@@ -75,12 +76,16 @@ function App() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="text-right leading-tight">
-            <span className="block text-[10px] tracking-wider text-ink-muted">WALLET</span>
+          <Link
+            to="/wallet"
+            title="Wallet"
+            className="flex items-center gap-1.5 text-primary transition-opacity hover:opacity-80"
+          >
+            <WalletIcon size={16} />
             <span className="font-display text-sm tabular-nums text-ink">
               {balanceMinor === null ? '—' : formatNaira(balanceMinor)}
             </span>
-          </div>
+          </Link>
           <Link
             to="/profile"
             title="Profile"
