@@ -2,6 +2,7 @@ import { AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import ErrorAlert from '../components/ErrorAlert'
+import LoginIntro from '../components/LoginIntro'
 import { ApiError } from '../lib/api'
 import { useAuth } from '../lib/AuthContext'
 
@@ -16,7 +17,14 @@ export default function Login() {
   const { status, user, requestOtp, verifyOtp } = useAuth()
   const navigate = useNavigate()
 
-  const [step, setStep] = useState<'phone' | 'code'>('phone')
+  // Starts on 'intro' every time this component mounts — which covers
+  // both a genuine first-time visitor and a returning one whose session
+  // expired and got redirected back here, since both are "about to log
+  // in with no context on screen" from this component's point of view.
+  // Skipping just advances local state to 'phone'; there's deliberately
+  // no persisted "seen it before" flag; re-mounting (a fresh /login visit)
+  // shows it again, which is exactly the behavior asked for.
+  const [step, setStep] = useState<'intro' | 'phone' | 'code'>('intro')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [code, setCode] = useState('')
   const [error, setError] = useState<Error | null>(null)
@@ -92,6 +100,10 @@ export default function Login() {
     } finally {
       setBusy(false)
     }
+  }
+
+  if (step === 'intro') {
+    return <LoginIntro onSkip={() => setStep('phone')} />
   }
 
   return (
