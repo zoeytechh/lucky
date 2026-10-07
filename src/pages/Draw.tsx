@@ -177,15 +177,6 @@ export default function Draw() {
     return () => clearTimeout(revealTimer)
   }, [pendingSettlement])
 
-  // The modal auto-dismisses if the viewer doesn't close it themselves —
-  // long enough to actually read a name/photo, short enough not to block
-  // the page indefinitely.
-  useEffect(() => {
-    if (!winnerModalData) return
-    const dismissTimer = setTimeout(() => setWinnerModalData(null), 8000)
-    return () => clearTimeout(dismissTimer)
-  }, [winnerModalData])
-
   // Once the winner number is actually shown, hold it on screen briefly
   // before resetting — clearing pendingSettlement here (not just
   // revealWinnerSlot) is what lets the queue-draining effect above pick

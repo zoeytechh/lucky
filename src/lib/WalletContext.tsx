@@ -24,14 +24,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   // Wallet routes are gated behind a complete profile (see
-  // requireCompleteProfile), so fetching is only meaningful once that's
-  // true — not just once a session exists. A user becomes 'authenticated'
-  // the moment they verify their OTP, before onboarding/avatar upload, so
-  // depending on status alone would fetch too early (get a 403, and never
-  // retry once the profile actually completes, since status itself
-  // doesn't change again). Depending on avatarUrl too re-fires this the
-  // moment onboarding finishes.
-  const profileComplete = user?.role !== 'USER' || Boolean(user?.avatarUrl)
+  // requireCompleteProfile — avatar AND name, both), so fetching is only
+  // meaningful once that's true — not just once a session exists. A user
+  // becomes 'authenticated' the moment they verify their OTP, before
+  // onboarding, so depending on status alone would fetch too early (get
+  // a 403, and never retry once the profile actually completes, since
+  // status itself doesn't change again). Depending on these fields too
+  // re-fires this the moment onboarding finishes.
+  const profileComplete = user?.role !== 'USER' || Boolean(user?.avatarUrl && user?.fullName)
 
   const refresh = useCallback(async () => {
     try {

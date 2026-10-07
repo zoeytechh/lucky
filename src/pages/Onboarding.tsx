@@ -5,18 +5,26 @@ import ErrorAlert from '../components/ErrorAlert'
 import { useAuth } from '../lib/AuthContext'
 
 export default function Onboarding() {
-  const { status, user, uploadAvatar } = useAuth()
+  const { status, user, uploadAvatar, updateProfile } = useAuth()
   const navigate = useNavigate()
   const fileInput = useRef<HTMLInputElement>(null)
 
   const [preview, setPreview] = useState<string | null>(null)
   const [file, setFile] = useState<File | null>(null)
+  const [name, setName] = useState('')
   const [error, setError] = useState<Error | null>(null)
   const [busy, setBusy] = useState(false)
 
+  // A real name is as mandatory as the photo — both exist for the same
+  // accountability reason, and a winner reveal or a public feed falling
+  // back to a masked phone number reads as anonymous for a real-money
+  // product. Checked together here so this page's own "done" condition
+  // never drifts from the backend's requireCompleteProfile.
+  const profileComplete = (u: typeof user) => Boolean(u?.avatarUrl && u?.fullName)
+
   // Guard clauses after every hook call — see the note in Login.tsx.
   if (status === 'unauthenticated') return <Navigate to="/login" replace />
-  if (status === 'authenticated' && (user?.role !== 'USER' || user.avatarUrl)) {
+  if (status === 'authenticated' && (user?.role !== 'USER' || profileComplete(user))) {
     return <Navigate to="/" replace />
   }
 
@@ -29,14 +37,16 @@ export default function Onboarding() {
   }
 
   async function handleSubmit() {
-    if (!file) return
+    const trimmedName = name.trim()
+    if ((!file && !user?.avatarUrl) || !trimmedName) return
     setError(null)
     setBusy(true)
     try {
-      await uploadAvatar(file)
+      if (file) await uploadAvatar(file)
+      await updateProfile(trimmedName)
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Upload failed'))
+      setError(err instanceof Error ? err : new Error('Could not save your profile'))
     } finally {
       setBusy(false)
     }
@@ -49,7 +59,8 @@ export default function Onboarding() {
           One last step
         </span>
         <p className="mt-2 text-sm text-ink-muted">
-          Add a profile photo. Real faces keep the draw fair for everyone.
+          Add a profile photo and your name. Real identities keep the draw fair for everyone —
+          no one sees your phone number, just this.
         </p>
 
         <button
@@ -57,8 +68,12 @@ export default function Onboarding() {
           onClick={() => fileInput.current?.click()}
           className="mx-auto mt-6 flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-hairline bg-ground-raised"
         >
-          {preview ? (
-            <img src={preview} alt="Your selected profile" className="h-full w-full object-cover" />
+          {preview || user?.avatarUrl ? (
+            <img
+              src={preview ?? user!.avatarUrl!}
+              alt="Your selected profile"
+              className="h-full w-full object-cover"
+            />
           ) : (
             <span className="text-xs text-ink-muted">Tap to choose</span>
           )}
@@ -69,6 +84,16 @@ export default function Onboarding() {
           accept="image/jpeg,image/png,image/webp"
           onChange={handlePick}
           className="hidden"
+        />
+
+        <input
+          type="text"
+          required
+          maxLength={80}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your name"
+          className="mt-5 w-full rounded-lg border border-hairline bg-ground-raised px-4 py-3 text-center text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none"
         />
 
         <AnimatePresence>
@@ -82,10 +107,10 @@ export default function Onboarding() {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!file || busy}
+          disabled={(!file && !user?.avatarUrl) || !name.trim() || busy}
           className="mt-6 w-full rounded-full bg-primary py-3 font-display text-sm text-primary-ink disabled:opacity-60"
         >
-          {busy ? 'UPLOADING…' : 'CONTINUE'}
+          {busy ? 'SAVING…' : 'CONTINUE'}
         </button>
       </div>
     </main>

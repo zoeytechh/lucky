@@ -40,10 +40,10 @@ export default function Login() {
   // Guard clauses come after every hook call — React requires hooks to run
   // unconditionally in the same order on every render, so an early return
   // above them caused "rendered fewer hooks than expected" on navigation.
-  if (status === 'authenticated' && (user?.role !== 'USER' || user.avatarUrl)) {
+  if (status === 'authenticated' && (user?.role !== 'USER' || (user.avatarUrl && user.fullName))) {
     return <Navigate to="/" replace />
   }
-  if (status === 'authenticated' && user?.role === 'USER' && !user.avatarUrl) {
+  if (status === 'authenticated' && user?.role === 'USER' && (!user.avatarUrl || !user.fullName)) {
     return <Navigate to="/onboarding" replace />
   }
 

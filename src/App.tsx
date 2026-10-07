@@ -44,7 +44,7 @@ function App() {
     return <Navigate to="/login" replace />
   }
 
-  if (user?.role === 'USER' && !user.avatarUrl) {
+  if (user?.role === 'USER' && (!user.avatarUrl || !user.fullName)) {
     return <Navigate to="/onboarding" replace />
   }
 
