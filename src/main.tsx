@@ -10,6 +10,7 @@ import Leaderboard from './pages/Leaderboard'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
 import Profile from './pages/Profile'
+import RecentEntries from './pages/RecentEntries'
 import Wallet from './pages/Wallet'
 
 const router = createBrowserRouter([
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <Draw /> },
+      { path: 'draw/recent', element: <RecentEntries /> },
       { path: 'wallet', element: <Wallet /> },
       { path: 'leaderboard', element: <Leaderboard /> },
       { path: 'profile', element: <Profile /> },
