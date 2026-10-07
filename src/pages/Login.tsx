@@ -149,7 +149,7 @@ export default function Login() {
               disabled={busy || resendIn > 0}
               className="mt-3 block w-full text-xs text-ink-muted underline disabled:no-underline disabled:opacity-60"
             >
-              {resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
+              {busy ? 'Sending…' : resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
             </button>
             <button
               type="button"
