@@ -24,12 +24,18 @@ export function getAccessToken(): string | null {
 export class ApiError extends Error {
   status: number
   code?: string
+  // Set only by OTP_RATE_LIMIT today — the server's authoritative
+  // remaining wait, so a countdown can stay accurate regardless of
+  // which client action triggered the 429 (not every caller has its own
+  // optimistic countdown already running).
+  retryAfterSeconds?: number
 
-  constructor(message: string, status: number, code?: string) {
+  constructor(message: string, status: number, code?: string, retryAfterSeconds?: number) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.code = code
+    this.retryAfterSeconds = retryAfterSeconds
   }
 }
 
@@ -57,7 +63,7 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
-    throw new ApiError(body.message ?? `Request failed: ${res.status}`, res.status, body.code)
+    throw new ApiError(body.message ?? `Request failed: ${res.status}`, res.status, body.code, body.retryAfterSeconds)
   }
 
   return res.json()

@@ -2,6 +2,7 @@ import { AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import ErrorAlert from '../components/ErrorAlert'
+import { ApiError } from '../lib/api'
 import { useAuth } from '../lib/AuthContext'
 
 // Mirrors the backend's own per-phone cooldown (otp.service.ts,
@@ -38,6 +39,18 @@ export default function Login() {
     return <Navigate to="/onboarding" replace />
   }
 
+  // Shared by both handlers below: on OTP_RATE_LIMIT, the server tells us
+  // exactly how long is left (otp.service.ts's retryAfterSeconds) — sync
+  // the countdown to that instead of leaving it unset, which is what let
+  // a 429 appear on the phone step with no countdown at all (that
+  // button never starts one on its own, only a successful send does).
+  function applyError(err: unknown) {
+    if (err instanceof ApiError && err.code === 'OTP_RATE_LIMIT' && typeof err.retryAfterSeconds === 'number') {
+      setResendIn(err.retryAfterSeconds)
+    }
+    setError(err instanceof Error ? err : new Error('Something went wrong'))
+  }
+
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -47,7 +60,7 @@ export default function Login() {
       setStep('code')
       setResendIn(RESEND_COOLDOWN_S)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Something went wrong'))
+      applyError(err)
     } finally {
       setBusy(false)
     }
@@ -61,7 +74,7 @@ export default function Login() {
       setCode('')
       setResendIn(RESEND_COOLDOWN_S)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Something went wrong'))
+      applyError(err)
     } finally {
       setBusy(false)
     }
@@ -108,10 +121,10 @@ export default function Login() {
             </AnimatePresence>
             <button
               type="submit"
-              disabled={busy}
+              disabled={busy || resendIn > 0}
               className="mt-4 w-full rounded-full bg-primary py-3 font-display text-sm text-primary-ink disabled:opacity-60"
             >
-              {busy ? 'SENDING…' : 'SEND CODE'}
+              {busy ? 'SENDING…' : resendIn > 0 ? `WAIT ${resendIn}s` : 'SEND CODE'}
             </button>
           </form>
         ) : (
