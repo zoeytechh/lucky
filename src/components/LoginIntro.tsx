@@ -18,7 +18,7 @@ export default function LoginIntro({ onContinue }: { onContinue: () => void }) {
           LUCKY
           <PartyMascot size={28} />
         </div>
-        <p className="font-display text-xl uppercase leading-snug text-ink">
+        <p className="max-w-70 font-body text-base font-extrabold leading-snug text-ink">
           Stand a chance to win <span className="text-primary">₦500,000</span> with just{' '}
           <span className="text-primary">₦1,000</span>
         </p>
