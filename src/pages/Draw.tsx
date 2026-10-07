@@ -78,8 +78,26 @@ export default function Draw() {
   // the round — the broadcast alone isn't reliable for that entrant: it
   // can race their page's own socket handshake if they only just
   // connected, which is exactly what left them seeing no reveal at all.
+  //
+  // A queue, not a single overwritable slot — with ROUND_SIZE small
+  // enough for rounds to settle in rapid succession (manual testing),
+  // round B could settle while round A's reveal was still mid-suspense;
+  // naively overwriting a single pendingSettlement would cancel A's
+  // reveal timer outright, leaving that viewer stuck watching numbers
+  // roll forever for a round that already finished — and since load()/
+  // refreshWallet() only ever run once a reveal actually completes, the
+  // same bug also showed up as "my balance/recent entries didn't
+  // update". Each queued settlement now gets its own full suspense+
+  // reveal cycle, processed one at a time, none dropped.
+  const [settlementQueue, setSettlementQueue] = useState<RoundSettled[]>([])
   const [pendingSettlement, setPendingSettlement] = useState<RoundSettled | null>(null)
-  const settledRoundIds = useRef(new Set<string>())
+  const queuedRoundIds = useRef(new Set<string>())
+
+  const enqueueSettlement = useCallback((s: RoundSettled) => {
+    if (queuedRoundIds.current.has(s.roundId)) return
+    queuedRoundIds.current.add(s.roundId)
+    setSettlementQueue((q) => [...q, s])
+  }, [])
 
   const load = useCallback(async () => {
     const [roundRes, myEntriesRes, recentRes] = await Promise.all([
@@ -104,26 +122,31 @@ export default function Draw() {
     setRound((r) => (r ? { ...r, entryCount: progress.entryCount } : r))
   }, [progress, round])
 
-  // The socket broadcast is one of two ways pendingSettlement gets set —
+  // The socket broadcast is one of two ways a settlement gets enqueued —
   // see handleEnter below for the other (this same user's own entry
-  // settling the round).
+  // settling the round). Both funnel through enqueueSettlement, whose
+  // queuedRoundIds dedupes if both arrive for the same round.
   useEffect(() => {
-    if (settled) setPendingSettlement(settled)
-  }, [settled])
+    if (settled) enqueueSettlement(settled)
+  }, [settled, enqueueSettlement])
+
+  // Pulls the next queued settlement once nothing is currently being
+  // revealed — this is what makes each one get its own full cycle
+  // instead of a later one stomping an earlier one still in progress.
+  useEffect(() => {
+    if (pendingSettlement || settlementQueue.length === 0) return
+    setPendingSettlement(settlementQueue[0])
+    setSettlementQueue((q) => q.slice(1))
+  }, [settlementQueue, pendingSettlement])
 
   // Live settlement reveal — fires for every connected viewer the instant
-  // the round fills, not just whoever placed the final entry. Guarded by
-  // settledRoundIds so a reconnect/duplicate emit (or the socket and this
-  // user's own HTTP response both arriving for the same round) never
-  // replays the same reveal twice. The backend already knows the winner
-  // the moment the round fills, but revealing it that fast reads as
-  // anticlimactic — so the numbers keep rolling for a deliberate 30–60s
-  // suspense window (random each round, so it never feels mechanically
-  // identical) before the winner actually appears.
+  // the round fills, not just whoever placed the final entry. The backend
+  // already knows the winner the moment the round fills, but revealing it
+  // that fast reads as anticlimactic — so the numbers keep rolling for a
+  // deliberate 30–60s suspense window (random each round, so it never
+  // feels mechanically identical) before the winner actually appears.
   useEffect(() => {
-    if (!pendingSettlement || settledRoundIds.current.has(pendingSettlement.roundId)) return
-    settledRoundIds.current.add(pendingSettlement.roundId)
-
+    if (!pendingSettlement) return
     const rollDelayMs = 30_000 + Math.random() * 29_000
     const revealTimer = setTimeout(() => {
       setRevealWinnerSlot(pendingSettlement.winnerSlotNumber)
@@ -132,11 +155,14 @@ export default function Draw() {
   }, [pendingSettlement])
 
   // Once the winner number is actually shown, hold it on screen briefly
-  // before resetting to the newly-opened round.
+  // before resetting — clearing pendingSettlement here (not just
+  // revealWinnerSlot) is what lets the queue-draining effect above pick
+  // up the next round, if one settled while this reveal was showing.
   useEffect(() => {
     if (revealWinnerSlot === null) return
     const clearTimer = setTimeout(() => {
       setRevealWinnerSlot(null)
+      setPendingSettlement(null)
       load()
       refreshWallet()
     }, 4000)
@@ -178,8 +204,9 @@ export default function Draw() {
         // what left the entrant who completed the round seeing no
         // reveal and a stale wallet balance. load()/refreshWallet() for
         // this round happen later, after the reveal (see the
-        // revealWinnerSlot effect above).
-        setPendingSettlement({
+        // revealWinnerSlot effect above). Enqueued, not set directly —
+        // same dedup/queueing as the socket path, in case both arrive.
+        enqueueSettlement({
           roundId: result.roundId,
           roundNumber: result.roundNumber,
           winnerSlotNumber: result.winnerSlotNumber!,
