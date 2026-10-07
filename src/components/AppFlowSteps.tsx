@@ -1,13 +1,11 @@
 import { motion } from 'motion/react'
 
-// The actual flow a new user goes through, in order — shared by
-// SplashLoader (shown while a cold Render instance wakes up / the auth
-// check resolves) and the login screen's intro (shown before a first-time
-// or session-expired visitor sees the phone/OTP form), so the two don't
-// drift into two different descriptions of the same app.
+// The actual flow a new user goes through, in order — shown on the login
+// screen's intro, before a first-time or session-expired visitor sees
+// the phone/OTP form.
 const STEPS = [
   'Fund your wallet — bank transfer or card',
-  'Enter the draw — ₦1,200',
+  'Enter the draw with ₦1,000 + ₦200 fee',
   'Round fills, the winner is picked live',
   'Win ₦500,000, get refunded, or try again',
   'Cash out to your bank anytime',

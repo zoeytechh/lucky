@@ -20,6 +20,7 @@ type Round = {
   capacity: number
   entryCostMinor: string
   stakeMinor: string
+  feeMinor: string
   winnerPayoutMinor: string
 }
 
@@ -309,10 +310,14 @@ export default function Draw() {
             ? `YOU'RE IN — SLOT ${myCurrentEntry.slotNumber}`
             : entering
               ? 'ENTERING…'
-              : `ENTER — ${formatNaira(round.entryCostMinor)}`}
+              : `ENTER ${formatNaira(round.entryCostMinor)}`}
         </motion.button>
-        {myCurrentEntry && (
+        {myCurrentEntry ? (
           <p className="mt-2 text-xs text-ink-muted">Waiting for the draw to complete…</p>
+        ) : (
+          <p className="mt-2 text-xs text-ink-muted">
+            {formatNaira(round.stakeMinor)} stake + {formatNaira(round.feeMinor)} fee
+          </p>
         )}
 
         <AnimatePresence>
