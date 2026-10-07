@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Lucky',
         short_name: 'Lucky',
@@ -30,8 +30,14 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
           },
+          // A dedicated maskable source (generated with safe-zone padding
+          // via @vite-pwa/assets-generator), not the same file as the
+          // 'any'-purpose icon above — Android crops a maskable icon to
+          // whatever shape the OS theme uses (circle, squircle, ...), so
+          // reusing an unpadded icon for both purposes risks the ring
+          // motif getting clipped.
           {
-            src: 'pwa-512x512.png',
+            src: 'maskable-icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',

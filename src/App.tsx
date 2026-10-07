@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'motion/react'
 import AnimatedBalance from './components/AnimatedBalance'
+import IosInstallBanner from './components/IosInstallBanner'
 import Loader from './components/Loader'
 import MobileMenu from './components/MobileMenu'
 import PartyMascot from './components/PartyMascot'
@@ -115,6 +116,8 @@ function App() {
       >
         <Outlet />
       </motion.div>
+
+      <IosInstallBanner />
     </div>
   )
 }

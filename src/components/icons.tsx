@@ -34,6 +34,31 @@ export function ClockIcon({ size = 18 }: { size?: number }) {
   )
 }
 
+// The actual iOS Share-sheet glyph (a box with an arrow leaving its top)
+// — used only to point at the real Safari share button, so it needs to
+// be recognizable as that specific icon, not a generic "share" symbol.
+export function IosShareIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path d="M9 2v9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M5.8 5.2 9 2l3.2 3.2"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M4.5 8v6a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V8"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export function TrophyIcon({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">

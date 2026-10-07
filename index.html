@@ -3,15 +3,48 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0b3d24" />
+
+    <!-- iOS has no web app manifest support for "add to home screen" —
+         these are the actual tags Safari reads to install a standalone,
+         full-screen app with a real icon instead of a bookmark. -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Lucky" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Anton&family=Nunito+Sans:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <title>Lucky</title>
+    <title>Lucky — enter the draw, win real cash</title>
+    <meta
+      name="description"
+      content="Enter a ₦1,200 draw round on Lucky. One winner takes half the pool, half the rest get their stake back — win real cash, paid out instantly."
+    />
+
+    <!-- Social share preview (link unfurls in WhatsApp, Twitter/X, etc). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Lucky" />
+    <meta property="og:url" content="https://lucky-tan-ten.vercel.app/" />
+    <meta property="og:title" content="Lucky — enter the draw, win real cash" />
+    <meta
+      property="og:description"
+      content="Enter a ₦1,200 draw round on Lucky. One winner takes half the pool, half the rest get their stake back — win real cash, paid out instantly."
+    />
+    <meta property="og:image" content="https://lucky-tan-ten.vercel.app/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Lucky — enter the draw, win real cash" />
+    <meta
+      name="twitter:description"
+      content="Enter a ₦1,200 draw round on Lucky. One winner takes half the pool, half the rest get their stake back."
+    />
+    <meta name="twitter:image" content="https://lucky-tan-ten.vercel.app/og-image.png" />
   </head>
   <body>
     <div id="root"></div>

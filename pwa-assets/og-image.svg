@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0b3d24"/>
+  <circle cx="330" cy="235" r="62" fill="#e8b63e"/>
+  <path
+    d="M330 310v150M330 375 203 265M330 375l127-110M330 455 220 605M330 455l118 150"
+    fill="none"
+    stroke="#e8b63e"
+    stroke-width="44"
+    stroke-linecap="round"
+  />
+  <text x="560" y="300" font-family="Arial, sans-serif" font-weight="800" font-size="92" fill="#e8b63e" letter-spacing="2">LUCKY</text>
+  <text x="560" y="360" font-family="Arial, sans-serif" font-weight="600" font-size="34" fill="#f4efde">Enter the draw. Win real cash.</text>
+</svg>
