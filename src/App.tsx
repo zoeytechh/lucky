@@ -51,7 +51,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-ground font-body text-ink">
-      <nav className="flex items-center justify-between border-b border-hairline bg-ground-raised px-5 py-3.5">
+      <nav className="sticky top-0 z-20 flex items-center justify-between border-b border-hairline bg-ground-raised px-5 py-3.5">
         <div className="flex items-center gap-6">
           <button
             type="button"
