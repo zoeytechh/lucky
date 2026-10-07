@@ -3,10 +3,10 @@ import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'motion/react'
 import AnimatedBalance from './components/AnimatedBalance'
 import IosInstallBanner from './components/IosInstallBanner'
-import Loader from './components/Loader'
 import MobileMenu from './components/MobileMenu'
 import PartyMascot from './components/PartyMascot'
 import PullToRefresh from './components/PullToRefresh'
+import SplashLoader from './components/SplashLoader'
 import { WalletIcon } from './components/icons'
 import { useAuth } from './lib/AuthContext'
 import { useWallet } from './lib/WalletContext'
@@ -37,11 +37,7 @@ function App() {
   const location = useLocation()
 
   if (status === 'loading') {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-ground">
-        <Loader size="lg" />
-      </div>
-    )
+    return <SplashLoader />
   }
 
   if (status === 'unauthenticated') {

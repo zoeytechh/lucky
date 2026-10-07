@@ -6,6 +6,7 @@ import DrawRoll from '../components/DrawRoll'
 import ErrorAlert from '../components/ErrorAlert'
 import { TrophyIcon } from '../components/icons'
 import Loader from '../components/Loader'
+import WinnerModal from '../components/WinnerModal'
 import { ApiError, apiFetch } from '../lib/api'
 import { type RoundSettled, useDrawSocket } from '../lib/useDrawSocket'
 import { formatRoundDate } from '../lib/date'
@@ -45,6 +46,8 @@ type PlaceEntryResponse = {
   roundNumber: number
   roundSettled: boolean
   winnerSlotNumber?: number
+  winnerDisplayName?: string
+  winnerAvatarUrl?: string | null
   nextRoundId?: string
   nextRoundNumber?: number
 }
@@ -93,6 +96,14 @@ export default function Draw() {
   const [pendingSettlement, setPendingSettlement] = useState<RoundSettled | null>(null)
   const queuedRoundIds = useRef(new Set<string>())
 
+  // A snapshot of whichever settlement last revealed, kept around purely
+  // to feed WinnerModal — deliberately separate from pendingSettlement,
+  // which the queue-draining effect clears 4s after reveal to pick up the
+  // next queued round. The modal has its own lifetime (dismissed by the
+  // viewer, or auto-dismissed after a longer hold) that shouldn't be tied
+  // to the queue's own pacing.
+  const [winnerModalData, setWinnerModalData] = useState<RoundSettled | null>(null)
+
   const enqueueSettlement = useCallback((s: RoundSettled) => {
     if (queuedRoundIds.current.has(s.roundId)) return
     queuedRoundIds.current.add(s.roundId)
@@ -116,11 +127,21 @@ export default function Draw() {
 
   // Live progress — every connected viewer's ring fills in step with
   // every entry, not just their own, since this only reflects whichever
-  // round the server says is currently open.
+  // round the server says is currently open. Depends only on `progress`
+  // (one run per socket event) — depending on `round` too, as this once
+  // did, is a classic infinite-loop trap: the effect would call setRound,
+  // which changes `round`'s identity even when entryCount is unchanged,
+  // which re-triggers the effect, forever. The round/entryCount check now
+  // lives inside the updater against the latest state, and bails out
+  // returning the *same* object when there's nothing to change, so a
+  // no-op update never forces a re-render in the first place.
   useEffect(() => {
-    if (!progress || !round || progress.roundId !== round.roundId) return
-    setRound((r) => (r ? { ...r, entryCount: progress.entryCount } : r))
-  }, [progress, round])
+    if (!progress) return
+    setRound((r) => {
+      if (!r || progress.roundId !== r.roundId || r.entryCount === progress.entryCount) return r
+      return { ...r, entryCount: progress.entryCount }
+    })
+  }, [progress])
 
   // The socket broadcast is one of two ways a settlement gets enqueued —
   // see handleEnter below for the other (this same user's own entry
@@ -150,9 +171,19 @@ export default function Draw() {
     const rollDelayMs = 30_000 + Math.random() * 29_000
     const revealTimer = setTimeout(() => {
       setRevealWinnerSlot(pendingSettlement.winnerSlotNumber)
+      setWinnerModalData(pendingSettlement)
     }, rollDelayMs)
     return () => clearTimeout(revealTimer)
   }, [pendingSettlement])
+
+  // The modal auto-dismisses if the viewer doesn't close it themselves —
+  // long enough to actually read a name/photo, short enough not to block
+  // the page indefinitely.
+  useEffect(() => {
+    if (!winnerModalData) return
+    const dismissTimer = setTimeout(() => setWinnerModalData(null), 8000)
+    return () => clearTimeout(dismissTimer)
+  }, [winnerModalData])
 
   // Once the winner number is actually shown, hold it on screen briefly
   // before resetting — clearing pendingSettlement here (not just
@@ -210,6 +241,8 @@ export default function Draw() {
           roundId: result.roundId,
           roundNumber: result.roundNumber,
           winnerSlotNumber: result.winnerSlotNumber!,
+          winnerDisplayName: result.winnerDisplayName!,
+          winnerAvatarUrl: result.winnerAvatarUrl ?? null,
           nextRoundId: result.nextRoundId!,
           nextRoundNumber: result.nextRoundNumber!,
         })
@@ -232,9 +265,27 @@ export default function Draw() {
   }
 
   const myCurrentEntry = myEntries.find((e) => e.roundId === round.roundId)
+  const myWin = winnerModalData
+    ? myEntries.find(
+        (e) => e.roundId === winnerModalData.roundId && e.slotNumber === winnerModalData.winnerSlotNumber,
+      )
+    : undefined
 
   return (
     <main className="mx-auto max-w-sm px-5 py-8">
+      <AnimatePresence>
+        {winnerModalData && (
+          <WinnerModal
+            displayName={winnerModalData.winnerDisplayName}
+            avatarUrl={winnerModalData.winnerAvatarUrl}
+            slotNumber={winnerModalData.winnerSlotNumber}
+            payoutMinor={round.winnerPayoutMinor}
+            isYou={!!myWin}
+            onClose={() => setWinnerModalData(null)}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col items-center text-center">
         <span className="mb-4 text-[11px] uppercase tracking-[0.15em] text-ink-muted">
           {round.roundNumber ? `Round ${round.roundNumber}` : 'Starting soon'}

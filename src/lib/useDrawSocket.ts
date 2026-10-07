@@ -13,6 +13,8 @@ export type RoundSettled = {
   roundId: string
   roundNumber: number
   winnerSlotNumber: number
+  winnerDisplayName: string
+  winnerAvatarUrl: string | null
   nextRoundId: string
   nextRoundNumber: number
 }
