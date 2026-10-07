@@ -284,16 +284,18 @@ export default function Draw() {
         of everyone else gets their stake back — the rest fund the winner.
       </p>
 
-      {recentEntries.length > 0 && (
-        <div className="mt-8">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[11px] uppercase tracking-wider text-ink-muted">
-              Recent entries
-            </h2>
+      <div className="mt-8">
+        <div className="flex items-center justify-between">
+          <h2 className="text-[11px] uppercase tracking-wider text-ink-muted">
+            Recent entries
+          </h2>
+          {recentEntries.length > 0 && (
             <Link to="/draw/recent" className="text-[11px] tracking-wide text-primary">
               View all
             </Link>
-          </div>
+          )}
+        </div>
+        {recentEntries.length > 0 ? (
           <div className="mt-3 flex flex-col gap-2">
             {recentEntries.map((entry) => (
               <div
@@ -313,8 +315,12 @@ export default function Draw() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="mt-3 rounded-lg bg-ground-raised px-4 py-4 text-center text-xs text-ink-muted">
+            No entries yet — place your first one above.
+          </p>
+        )}
+      </div>
 
       <Link
         to="/draw/winners"
