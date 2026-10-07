@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'motion/react'
+import AnimatedBalance from './components/AnimatedBalance'
 import Loader from './components/Loader'
 import MobileMenu from './components/MobileMenu'
 import { WalletIcon } from './components/icons'
 import { useAuth } from './lib/AuthContext'
-import { formatNaira } from './lib/money'
 import { useWallet } from './lib/WalletContext'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -82,9 +82,10 @@ function App() {
             className="flex items-center gap-1.5 text-primary transition-opacity hover:opacity-80"
           >
             <WalletIcon size={16} />
-            <span className="font-display text-sm tabular-nums text-ink">
-              {balanceMinor === null ? '—' : formatNaira(balanceMinor)}
-            </span>
+            <AnimatedBalance
+              balanceMinor={balanceMinor}
+              className="font-display text-sm tabular-nums text-ink"
+            />
           </Link>
           <Link
             to="/profile"

@@ -5,7 +5,8 @@ import DrawRoll from '../components/DrawRoll'
 import ErrorAlert from '../components/ErrorAlert'
 import Loader from '../components/Loader'
 import { ApiError, apiFetch } from '../lib/api'
-import { useDrawSocket } from '../lib/useDrawSocket'
+import { type RoundSettled, useDrawSocket } from '../lib/useDrawSocket'
+import { formatRoundDate } from '../lib/date'
 import { formatNaira } from '../lib/money'
 import { useWallet } from '../lib/WalletContext'
 
@@ -29,9 +30,21 @@ type MyEntry = {
 type RecentEntry = {
   id: string
   roundNumber: number
+  roundDate: string
   slotNumber: number
   outcome: 'PENDING' | 'WON' | 'REFUNDED' | 'LOST'
   user: { id: string; displayName: string }
+}
+
+type PlaceEntryResponse = {
+  entryId: string
+  slotNumber: number
+  roundId: string
+  roundNumber: number
+  roundSettled: boolean
+  winnerSlotNumber?: number
+  nextRoundId?: string
+  nextRoundNumber?: number
 }
 
 const outcomeLabel: Record<RecentEntry['outcome'], string> = {
@@ -58,13 +71,19 @@ export default function Draw() {
   const [error, setError] = useState<ApiError | Error | null>(null)
   const [confirmation, setConfirmation] = useState<string | null>(null)
   const [revealWinnerSlot, setRevealWinnerSlot] = useState<number | null>(null)
+  // Fed by either the live socket broadcast or, directly, by this user's
+  // own POST /api/draw/entries response when it's the one that settles
+  // the round — the broadcast alone isn't reliable for that entrant: it
+  // can race their page's own socket handshake if they only just
+  // connected, which is exactly what left them seeing no reveal at all.
+  const [pendingSettlement, setPendingSettlement] = useState<RoundSettled | null>(null)
   const settledRoundIds = useRef(new Set<string>())
 
   const load = useCallback(async () => {
     const [roundRes, myEntriesRes, recentRes] = await Promise.all([
       apiFetch('/api/draw/current'),
       apiFetch('/api/draw/entries?limit=5'),
-      apiFetch('/api/draw/recent-entries?limit=3'),
+      apiFetch('/api/draw/recent-entries?pageSize=3'),
     ])
     setRound(roundRes)
     setMyEntries(myEntriesRes.entries)
@@ -83,24 +102,32 @@ export default function Draw() {
     setRound((r) => (r ? { ...r, entryCount: progress.entryCount } : r))
   }, [progress, round])
 
+  // The socket broadcast is one of two ways pendingSettlement gets set —
+  // see handleEnter below for the other (this same user's own entry
+  // settling the round).
+  useEffect(() => {
+    if (settled) setPendingSettlement(settled)
+  }, [settled])
+
   // Live settlement reveal — fires for every connected viewer the instant
   // the round fills, not just whoever placed the final entry. Guarded by
-  // settledRoundIds so a reconnect/duplicate emit never replays the same
-  // reveal twice. The backend already knows the winner the moment the
-  // round fills, but revealing it that fast reads as anticlimactic — so
-  // the numbers keep rolling for a deliberate 30–60s suspense window
-  // (random each round, so it never feels mechanically identical) before
-  // the winner actually appears.
+  // settledRoundIds so a reconnect/duplicate emit (or the socket and this
+  // user's own HTTP response both arriving for the same round) never
+  // replays the same reveal twice. The backend already knows the winner
+  // the moment the round fills, but revealing it that fast reads as
+  // anticlimactic — so the numbers keep rolling for a deliberate 30–60s
+  // suspense window (random each round, so it never feels mechanically
+  // identical) before the winner actually appears.
   useEffect(() => {
-    if (!settled || settledRoundIds.current.has(settled.roundId)) return
-    settledRoundIds.current.add(settled.roundId)
+    if (!pendingSettlement || settledRoundIds.current.has(pendingSettlement.roundId)) return
+    settledRoundIds.current.add(pendingSettlement.roundId)
 
     const rollDelayMs = 30_000 + Math.random() * 29_000
     const revealTimer = setTimeout(() => {
-      setRevealWinnerSlot(settled.winnerSlotNumber)
+      setRevealWinnerSlot(pendingSettlement.winnerSlotNumber)
     }, rollDelayMs)
     return () => clearTimeout(revealTimer)
-  }, [settled])
+  }, [pendingSettlement])
 
   // Once the winner number is actually shown, hold it on screen briefly
   // before resetting to the newly-opened round.
@@ -119,17 +146,47 @@ export default function Draw() {
     setEntering(true)
     try {
       const idempotencyKey = crypto.randomUUID()
-      const result = await apiFetch('/api/draw/entries', {
+      const result: PlaceEntryResponse = await apiFetch('/api/draw/entries', {
         method: 'POST',
         body: JSON.stringify({ idempotencyKey }),
       })
+
+      // Reflected locally right away — important for the settled branch
+      // below, which deliberately skips load() until after the reveal,
+      // so the ring and the "you're in" button state shouldn't have to
+      // wait on a refetch to catch up.
+      setRound((r) => (r ? { ...r, entryCount: result.slotNumber } : r))
+      setMyEntries((prev) => [
+        { id: result.entryId, roundId: result.roundId, slotNumber: result.slotNumber, outcome: 'PENDING' },
+        ...prev,
+      ])
+
       setConfirmation(
         result.roundSettled
-          ? `You're in — slot ${result.slotNumber}. That was the last slot — the round just settled!`
+          ? `You're in — slot ${result.slotNumber}. That was the last slot — the draw is starting!`
           : `You're in — slot ${result.slotNumber} of ${round?.capacity}.`,
       )
-      await Promise.all([load(), refreshWallet()])
       setTimeout(() => setConfirmation(null), 4000)
+
+      if (result.roundSettled) {
+        // Drive the reveal from this response's own settlement info
+        // directly, instead of waiting on the socket broadcast for it —
+        // that broadcast can race this very request's own socket
+        // handshake if the page only just connected, which is exactly
+        // what left the entrant who completed the round seeing no
+        // reveal and a stale wallet balance. load()/refreshWallet() for
+        // this round happen later, after the reveal (see the
+        // revealWinnerSlot effect above).
+        setPendingSettlement({
+          roundId: result.roundId,
+          roundNumber: result.roundNumber,
+          winnerSlotNumber: result.winnerSlotNumber!,
+          nextRoundId: result.nextRoundId!,
+          nextRoundNumber: result.nextRoundNumber!,
+        })
+      } else {
+        await Promise.all([load(), refreshWallet()])
+      }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Could not enter the draw'))
     } finally {
@@ -243,7 +300,10 @@ export default function Draw() {
               >
                 <div className="flex flex-col items-start">
                   <span className="text-sm text-ink">{entry.user.displayName}</span>
-                  <span className="text-[10px] text-ink-muted">Slot {entry.slotNumber}</span>
+                  <span className="text-[10px] text-ink-muted">
+                    Round {entry.roundNumber} · {formatRoundDate(entry.roundDate)} · Slot{' '}
+                    {entry.slotNumber}
+                  </span>
                 </div>
                 <span className={`font-display text-xs ${outcomeClass[entry.outcome]}`}>
                   {outcomeLabel[entry.outcome]}
@@ -253,6 +313,12 @@ export default function Draw() {
           </div>
         </div>
       )}
+
+      <div className="mt-6 text-center">
+        <Link to="/draw/winners" className="text-[11px] tracking-wide text-primary">
+          View past winners →
+        </Link>
+      </div>
     </main>
   )
 }

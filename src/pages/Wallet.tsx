@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import AnimatedBalance from '../components/AnimatedBalance'
 import Loader from '../components/Loader'
 import { apiFetch } from '../lib/api'
 import { formatNaira } from '../lib/money'
@@ -38,9 +39,14 @@ export default function Wallet() {
 
       <div className="mt-5 rounded-xl bg-ground-raised px-5 py-6 text-center">
         <span className="block text-[11px] tracking-wider text-ink-muted">BALANCE</span>
-        <span className="mt-1 block font-display text-3xl tabular-nums text-primary">
-          {balanceLoading || balanceMinor === null ? '—' : formatNaira(balanceMinor)}
-        </span>
+        {balanceLoading ? (
+          <span className="mt-1 block font-display text-3xl tabular-nums text-primary">—</span>
+        ) : (
+          <AnimatedBalance
+            balanceMinor={balanceMinor}
+            className="mt-1 block font-display text-3xl tabular-nums text-primary"
+          />
+        )}
 
         <div className="mt-5 flex justify-center gap-3">
           <button
