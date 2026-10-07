@@ -1,8 +1,15 @@
 import { AnimatePresence } from 'motion/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import ErrorAlert from '../components/ErrorAlert'
 import { useAuth } from '../lib/AuthContext'
+
+// Mirrors the backend's own per-phone cooldown (otp.service.ts,
+// REQUEST_COOLDOWN_MS) — purely cosmetic (the server is the real guard),
+// just gives the resend button something sensible to count down from
+// instead of either hiding it entirely or letting the user hit the
+// 429 blind.
+const RESEND_COOLDOWN_S = 60
 
 export default function Login() {
   const { status, user, requestOtp, verifyOtp } = useAuth()
@@ -13,6 +20,13 @@ export default function Login() {
   const [code, setCode] = useState('')
   const [error, setError] = useState<Error | null>(null)
   const [busy, setBusy] = useState(false)
+  const [resendIn, setResendIn] = useState(0)
+
+  useEffect(() => {
+    if (resendIn <= 0) return
+    const id = setInterval(() => setResendIn((s) => Math.max(0, s - 1)), 1000)
+    return () => clearInterval(id)
+  }, [resendIn])
 
   // Guard clauses come after every hook call — React requires hooks to run
   // unconditionally in the same order on every render, so an early return
@@ -31,6 +45,21 @@ export default function Login() {
     try {
       await requestOtp(phoneNumber)
       setStep('code')
+      setResendIn(RESEND_COOLDOWN_S)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Something went wrong'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleResend() {
+    setError(null)
+    setBusy(true)
+    try {
+      await requestOtp(phoneNumber)
+      setCode('')
+      setResendIn(RESEND_COOLDOWN_S)
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Something went wrong'))
     } finally {
@@ -116,12 +145,21 @@ export default function Login() {
             </button>
             <button
               type="button"
+              onClick={handleResend}
+              disabled={busy || resendIn > 0}
+              className="mt-3 block w-full text-xs text-ink-muted underline disabled:no-underline disabled:opacity-60"
+            >
+              {resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 setStep('phone')
                 setCode('')
                 setError(null)
+                setResendIn(0)
               }}
-              className="mt-3 text-xs text-ink-muted underline"
+              className="mt-2 block w-full text-xs text-ink-muted underline"
             >
               Use a different number
             </button>
