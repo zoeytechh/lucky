@@ -15,8 +15,17 @@ export type RoundSettled = {
   winnerSlotNumber: number
   winnerDisplayName: string
   winnerAvatarUrl: string | null
+  // When the winner number actually appears — decided once server-side
+  // (see REVEAL_MIN_MS/REVEAL_MAX_MS in lucky-api), so every viewer
+  // counts down to the same instant instead of each client randomizing
+  // its own.
+  revealAt: string
   nextRoundId: string
   nextRoundNumber: number
+  // When the next round starts accepting entries — revealAt +
+  // REVEAL_HOLD_MS, and the actual backend-enforced gate (a POST to
+  // /api/draw/entries before this is refused), not just a UI convention.
+  nextEntriesOpenAt: string
 }
 
 /**

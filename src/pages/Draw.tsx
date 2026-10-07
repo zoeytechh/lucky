@@ -22,6 +22,25 @@ type Round = {
   stakeMinor: string
   feeMinor: string
   winnerPayoutMinor: string
+  // When this round starts accepting entries — in the future for as long
+  // as the *previous* round's reveal is still playing out (see the
+  // schema comment on DrawRound.entriesOpenAt in lucky-api). Backend-
+  // enforced, not just a frontend gate.
+  entriesOpenAt: string | null
+}
+
+// What /api/draw/current returns for the round that just settled, when
+// the open round isn't accepting entries yet — everything needed to
+// show a late-joining viewer the exact same suspense/reveal an already-
+// connected one sees, instead of a blank "next" round they'd otherwise
+// land on mid-reveal.
+type DrawingInfo = {
+  roundId: string
+  roundNumber: number
+  winnerSlotNumber: number
+  winnerDisplayName: string
+  winnerAvatarUrl: string | null
+  revealAt: string
 }
 
 type MyEntry = {
@@ -49,8 +68,10 @@ type PlaceEntryResponse = {
   winnerSlotNumber?: number
   winnerDisplayName?: string
   winnerAvatarUrl?: string | null
+  revealAt?: string
   nextRoundId?: string
   nextRoundNumber?: number
+  nextEntriesOpenAt?: string
 }
 
 const outcomeLabel: Record<RecentEntry['outcome'], string> = {
@@ -120,7 +141,29 @@ export default function Draw() {
     setRound(roundRes)
     setMyEntries(myEntriesRes.entries)
     setRecentEntries(recentRes.entries)
-  }, [])
+
+    // This round isn't accepting entries yet — the previous one (sent
+    // back as `drawing`) is still being revealed to whoever was already
+    // watching it. Join that same reveal instead of landing on what
+    // would otherwise look like a blank, freshly-opened round with no
+    // explanation. Routed through the same queue/dedupe as the live
+    // socket path, so if both somehow arrive for the same round, only
+    // one reveal plays.
+    const drawing: DrawingInfo | null = roundRes.drawing
+    if (drawing) {
+      enqueueSettlement({
+        roundId: drawing.roundId,
+        roundNumber: drawing.roundNumber,
+        winnerSlotNumber: drawing.winnerSlotNumber,
+        winnerDisplayName: drawing.winnerDisplayName,
+        winnerAvatarUrl: drawing.winnerAvatarUrl,
+        revealAt: drawing.revealAt,
+        nextRoundId: roundRes.roundId,
+        nextRoundNumber: roundRes.roundNumber,
+        nextEntriesOpenAt: roundRes.entriesOpenAt,
+      })
+    }
+  }, [enqueueSettlement])
 
   useEffect(() => {
     load().finally(() => setLoading(false))
@@ -162,35 +205,41 @@ export default function Draw() {
   }, [settlementQueue, pendingSettlement])
 
   // Live settlement reveal — fires for every connected viewer the instant
-  // the round fills, not just whoever placed the final entry. The backend
-  // already knows the winner the moment the round fills, but revealing it
-  // that fast reads as anticlimactic — so the numbers keep rolling for a
-  // deliberate 30–60s suspense window (random each round, so it never
-  // feels mechanically identical) before the winner actually appears.
+  // the round fills, not just whoever placed the final entry. Counts
+  // down to `revealAt`, a single instant decided once server-side (not
+  // independently randomized per client as this used to work) — that's
+  // what lets a late-joining viewer (via load()'s `drawing` catch-up
+  // above) count down to the exact same moment as someone who's been
+  // watching since the round filled, instead of each client guessing
+  // its own window.
   useEffect(() => {
     if (!pendingSettlement) return
-    const rollDelayMs = 30_000 + Math.random() * 29_000
+    const delayMs = Math.max(0, new Date(pendingSettlement.revealAt).getTime() - Date.now())
     const revealTimer = setTimeout(() => {
       setRevealWinnerSlot(pendingSettlement.winnerSlotNumber)
       setWinnerModalData(pendingSettlement)
-    }, rollDelayMs)
+    }, delayMs)
     return () => clearTimeout(revealTimer)
   }, [pendingSettlement])
 
-  // Once the winner number is actually shown, hold it on screen briefly
-  // before resetting — clearing pendingSettlement here (not just
-  // revealWinnerSlot) is what lets the queue-draining effect above pick
-  // up the next round, if one settled while this reveal was showing.
+  // Once the winner number is actually shown, hold it on screen until
+  // nextEntriesOpenAt — the same server-decided instant that's also the
+  // actual backend-enforced gate on the next round's entries (a POST
+  // before this passes is refused), not just a client-side convention.
+  // Clearing pendingSettlement here (not just revealWinnerSlot) is what
+  // lets the queue-draining effect above pick up the next round, if one
+  // settled while this reveal was showing.
   useEffect(() => {
-    if (revealWinnerSlot === null) return
+    if (revealWinnerSlot === null || !pendingSettlement) return
+    const holdMs = Math.max(0, new Date(pendingSettlement.nextEntriesOpenAt).getTime() - Date.now())
     const clearTimer = setTimeout(() => {
       setRevealWinnerSlot(null)
       setPendingSettlement(null)
       load()
       refreshWallet()
-    }, 4000)
+    }, holdMs)
     return () => clearTimeout(clearTimer)
-  }, [revealWinnerSlot, load, refreshWallet])
+  }, [revealWinnerSlot, pendingSettlement, load, refreshWallet])
 
   async function handleEnter() {
     setError(null)
@@ -235,8 +284,10 @@ export default function Draw() {
           winnerSlotNumber: result.winnerSlotNumber!,
           winnerDisplayName: result.winnerDisplayName!,
           winnerAvatarUrl: result.winnerAvatarUrl ?? null,
+          revealAt: result.revealAt!,
           nextRoundId: result.nextRoundId!,
           nextRoundNumber: result.nextRoundNumber!,
+          nextEntriesOpenAt: result.nextEntriesOpenAt!,
         })
       } else {
         await Promise.all([load(), refreshWallet()])
@@ -263,6 +314,16 @@ export default function Draw() {
       )
     : undefined
 
+  // True for the whole suspense-through-hold window, whether this viewer
+  // has been watching since the round filled (pendingSettlement comes
+  // from the live socket broadcast) or just joined mid-reveal (same
+  // state, but populated by load()'s `drawing` catch-up instead) — in
+  // both cases entries are genuinely refused server-side until
+  // nextEntriesOpenAt, so the button being disabled here is enforcement
+  // the backend actually holds, not just a UI nicety.
+  const drawInProgress =
+    !!pendingSettlement || (round.entriesOpenAt ? new Date(round.entriesOpenAt) > new Date() : false)
+
   return (
     <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
       <AnimatePresence>
@@ -280,12 +341,16 @@ export default function Draw() {
 
       <div className="flex flex-col items-center text-center">
         <span className="mb-4 text-[11px] uppercase tracking-[0.15em] text-ink-muted">
-          {round.roundNumber ? `Round ${round.roundNumber}` : 'Starting soon'}
+          {pendingSettlement
+            ? `Round ${pendingSettlement.roundNumber}`
+            : round.roundNumber
+              ? `Round ${round.roundNumber}`
+              : 'Starting soon'}
         </span>
 
         <DrawRoll
           capacity={round.capacity}
-          entered={round.entryCount}
+          entered={pendingSettlement ? round.capacity : round.entryCount}
           mySlotNumber={myCurrentEntry?.slotNumber ?? null}
           winnerSlotNumber={revealWinnerSlot}
         />
@@ -293,18 +358,24 @@ export default function Draw() {
         <motion.button
           type="button"
           onClick={handleEnter}
-          disabled={entering || !!myCurrentEntry}
+          disabled={entering || !!myCurrentEntry || drawInProgress}
           whileTap={{ scale: 0.95 }}
           className="mt-6 rounded-full bg-primary px-8 py-3 font-display text-base text-primary-ink shadow-[0_8px_22px_-8px_rgba(255,138,126,0.55)] disabled:opacity-60"
         >
           {myCurrentEntry
             ? `YOU'RE IN AT SLOT ${myCurrentEntry.slotNumber}`
-            : entering
-              ? 'ENTERING…'
-              : `ENTER ${formatNaira(round.entryCostMinor)}`}
+            : drawInProgress
+              ? 'DRAW IN PROGRESS…'
+              : entering
+                ? 'ENTERING…'
+                : `ENTER ${formatNaira(round.entryCostMinor)}`}
         </motion.button>
         {myCurrentEntry ? (
           <p className="mt-2 text-xs text-ink-muted">Waiting for the draw to complete…</p>
+        ) : drawInProgress ? (
+          <p className="mt-2 text-xs text-ink-muted">
+            A winner is being picked — you can enter the next round once this one's done.
+          </p>
         ) : (
           <p className="mt-2 text-xs text-ink-muted">
             {formatNaira(round.stakeMinor)} stake + {formatNaira(round.feeMinor)} app fee
