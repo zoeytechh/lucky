@@ -34,6 +34,26 @@ export function ClockIcon({ size = 18 }: { size?: number }) {
   )
 }
 
+export function TrophyIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path
+        d="M6 3h6v4.5a3 3 0 0 1-6 0V3Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6 4H3.5a1 1 0 0 0-1 1v1a2.5 2.5 0 0 0 2.5 2.5H6M12 4h2.5a1 1 0 0 1 1 1v1a2.5 2.5 0 0 1-2.5 2.5H12"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path d="M9 10.5V13M6.5 15h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function AlertTriangleIcon({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">

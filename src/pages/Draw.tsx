@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DrawRoll from '../components/DrawRoll'
 import ErrorAlert from '../components/ErrorAlert'
+import { TrophyIcon } from '../components/icons'
 import Loader from '../components/Loader'
 import { ApiError, apiFetch } from '../lib/api'
 import { type RoundSettled, useDrawSocket } from '../lib/useDrawSocket'
@@ -314,11 +315,21 @@ export default function Draw() {
         </div>
       )}
 
-      <div className="mt-6 text-center">
-        <Link to="/draw/winners" className="text-[11px] tracking-wide text-primary">
-          View past winners →
-        </Link>
-      </div>
+      <Link
+        to="/draw/winners"
+        className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/10 px-5 py-4 transition-colors hover:border-primary/60 hover:bg-primary/15"
+      >
+        <span className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-ink">
+            <TrophyIcon size={18} />
+          </span>
+          <span className="flex flex-col">
+            <span className="font-display text-sm text-primary">Past Winners</span>
+            <span className="text-[11px] text-ink-muted">See who's won so far</span>
+          </span>
+        </span>
+        <span className="font-display text-lg text-primary">→</span>
+      </Link>
     </main>
   )
 }
