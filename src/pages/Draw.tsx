@@ -316,7 +316,7 @@ export default function Draw() {
           <p className="mt-2 text-xs text-ink-muted">Waiting for the draw to complete…</p>
         ) : (
           <p className="mt-2 text-xs text-ink-muted">
-            {formatNaira(round.stakeMinor)} stake + {formatNaira(round.feeMinor)} fee
+            {formatNaira(round.stakeMinor)} stake + {formatNaira(round.feeMinor)} app fee
           </p>
         )}
 
