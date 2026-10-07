@@ -33,6 +33,7 @@ function App() {
   const { status, user } = useAuth()
   const { balanceMinor } = useWallet()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
   const location = useLocation()
 
   if (status === 'loading') {
@@ -108,10 +109,10 @@ function App() {
       </nav>
 
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <PullToRefresh />
+      <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)} />
 
       <motion.div
-        key={location.pathname}
+        key={`${location.pathname}-${refreshKey}`}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease: 'easeOut' }}

@@ -3,6 +3,11 @@ import { useEffect, useRef, useState } from 'react'
 
 const THRESHOLD = 70
 const MAX_PULL = 110
+// How long the spinner stays visible after a refresh fires — there's no
+// promise to await here (onRefresh just remounts the current page, see
+// App.tsx), so this is a fixed, generous-enough window for that remount
+// and its data fetch to visibly settle, not a real completion signal.
+const REFRESHING_DISPLAY_MS = 700
 
 // iOS-only: installed Android Chrome/WebAPK still offers its own native
 // pull-to-refresh in standalone mode, so a custom one there only doubles
@@ -24,16 +29,24 @@ function isStandalone(): boolean {
  * screen. This recreates the gesture, but only on iOS standalone; a
  * regular browser tab (any platform) and installed Android both already
  * have a working native gesture, so this stays completely inert there.
+ *
+ * Deliberately does NOT call window.location.reload() — a full reload
+ * on iOS standalone was observed dropping the user back to the login
+ * screen (the in-memory access token and the httpOnly refresh cookie
+ * both need to survive the reload and clearly don't reliably in that
+ * context). `onRefresh` instead remounts just the routed page content
+ * (see App.tsx's refreshKey), which re-runs every page's own data
+ * fetch without ever touching auth state or navigating anywhere.
  */
-export default function PullToRefresh() {
+export default function PullToRefresh({ onRefresh }: { onRefresh: () => void }) {
   const [pull, setPull] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
   const startY = useRef<number | null>(null)
   const pullRef = useRef(0)
-  const standalone = useRef(isIos() && isStandalone())
+  const active = useRef(isIos() && isStandalone())
 
   useEffect(() => {
-    if (!standalone.current) return
+    if (!active.current) return
 
     function onTouchStart(e: TouchEvent) {
       if (window.scrollY > 0) return
@@ -49,10 +62,10 @@ export default function PullToRefresh() {
     function onTouchEnd() {
       if (pullRef.current >= THRESHOLD) {
         setRefreshing(true)
-        window.location.reload()
-      } else {
-        setPull(0)
+        onRefresh()
+        setTimeout(() => setRefreshing(false), REFRESHING_DISPLAY_MS)
       }
+      setPull(0)
       startY.current = null
       pullRef.current = 0
     }
@@ -65,16 +78,17 @@ export default function PullToRefresh() {
       window.removeEventListener('touchmove', onTouchMove)
       window.removeEventListener('touchend', onTouchEnd)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (!standalone.current) return null
+  if (!active.current) return null
 
   const shown = pull > 0 || refreshing
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 top-14 z-30 flex justify-center transition-transform duration-200"
-      style={{ transform: `translateY(${shown ? Math.min(pull, THRESHOLD) - 28 : -40}px)` }}
+      className={`pointer-events-none fixed inset-x-0 top-0 z-30 flex justify-center transition-opacity duration-200 ${shown ? 'opacity-100' : 'opacity-0'}`}
+      style={{ transform: `translateY(${shown ? 16 + Math.min(pull, THRESHOLD) * 0.4 : -100}px)` }}
     >
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-ink shadow-[0_6px_16px_-4px_rgba(0,0,0,0.4)]">
         <motion.svg
