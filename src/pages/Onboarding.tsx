@@ -49,7 +49,7 @@ export default function Onboarding() {
           One last step
         </span>
         <p className="mt-2 text-sm text-ink-muted">
-          Add a profile photo — real faces keep the draw fair for everyone.
+          Add a profile photo. Real faces keep the draw fair for everyone.
         </p>
 
         <button

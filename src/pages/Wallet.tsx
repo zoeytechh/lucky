@@ -34,7 +34,7 @@ export default function Wallet() {
   }, [])
 
   return (
-    <main className="mx-auto max-w-sm px-5 py-8">
+    <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
       <h1 className="font-display text-xl uppercase tracking-wide text-ink">Wallet</h1>
 
       <div className="mt-5 rounded-xl bg-ground-raised px-5 py-6 text-center">

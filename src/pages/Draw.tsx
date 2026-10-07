@@ -223,8 +223,8 @@ export default function Draw() {
 
       setConfirmation(
         result.roundSettled
-          ? `You're in — slot ${result.slotNumber}. That was the last slot — the draw is starting!`
-          : `You're in — slot ${result.slotNumber} of ${round?.capacity}.`,
+          ? `You're in at slot ${result.slotNumber}. That was the last slot, the draw is starting!`
+          : `You're in at slot ${result.slotNumber} of ${round?.capacity}.`,
       )
       setTimeout(() => setConfirmation(null), 4000)
 
@@ -273,7 +273,7 @@ export default function Draw() {
     : undefined
 
   return (
-    <main className="mx-auto max-w-sm px-5 py-8">
+    <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
       <AnimatePresence>
         {winnerModalData && (
           <WinnerModal
@@ -307,7 +307,7 @@ export default function Draw() {
           className="mt-6 rounded-full bg-primary px-8 py-3 font-display text-base text-primary-ink shadow-[0_8px_22px_-8px_rgba(255,138,126,0.55)] disabled:opacity-60"
         >
           {myCurrentEntry
-            ? `YOU'RE IN — SLOT ${myCurrentEntry.slotNumber}`
+            ? `YOU'RE IN AT SLOT ${myCurrentEntry.slotNumber}`
             : entering
               ? 'ENTERING…'
               : `ENTER ${formatNaira(round.entryCostMinor)}`}
@@ -364,7 +364,7 @@ export default function Draw() {
 
       <p className="mt-6 text-center text-xs leading-relaxed text-ink-muted">
         {round.capacity.toLocaleString()} entries a round. One winner takes half the pool. Half
-        of everyone else gets their stake back — the rest fund the winner.{' '}
+        of everyone else gets their stake back. The rest fund the winner.{' '}
         <Link to="/how-to-play" className="text-primary underline">
           How it works
         </Link>
@@ -403,7 +403,7 @@ export default function Draw() {
           </div>
         ) : (
           <p className="mt-3 rounded-lg bg-ground-raised px-4 py-4 text-center text-xs text-ink-muted">
-            No entries yet — place your first one above.
+            No entries yet. Place your first one above.
           </p>
         )}
       </div>

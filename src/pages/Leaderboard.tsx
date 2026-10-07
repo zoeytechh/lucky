@@ -8,12 +8,12 @@ const TOP_THREE = [
 
 export default function Leaderboard() {
   return (
-    <main className="mx-auto max-w-sm px-5 py-8">
+    <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
       <h1 className="font-display text-xl uppercase tracking-wide text-ink">
         Today's Top 3
       </h1>
       <p className="mt-1 text-xs text-ink-muted">
-        Ranked by total spent today — entries break ties.
+        Ranked by total spent today. Entries break ties.
       </p>
 
       <div className="mt-6 flex flex-col gap-2">

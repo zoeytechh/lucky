@@ -79,7 +79,7 @@ export default function CommentFeed() {
           <p className="py-6 text-center text-xs text-ink-muted">Loading…</p>
         ) : comments.length === 0 ? (
           <p className="py-6 text-center text-xs text-ink-muted">
-            No comments yet — be the first to share your experience.
+            No comments yet. Be the first to share your experience.
           </p>
         ) : (
           <AnimatePresence initial={false}>

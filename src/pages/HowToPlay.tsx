@@ -50,7 +50,7 @@ export default function HowToPlay() {
   const lossCount = Math.floor(nonWinnerCount / 2)
 
   return (
-    <main className="mx-auto max-w-sm px-5 py-8">
+    <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
       <h1 className="font-display text-xl uppercase tracking-wide text-ink">How Lucky works</h1>
       <p className="mt-1 text-xs text-ink-muted">
         Everything that happens between paying your entry fee and seeing money in your wallet.
@@ -58,14 +58,14 @@ export default function HowToPlay() {
 
       <Section title="1. Enter a round">
         <p>
-          Every entry costs {formatNaira(round.entryCostMinor)} — {formatNaira(round.stakeMinor)}{' '}
+          Every entry costs {formatNaira(round.entryCostMinor)}: {formatNaira(round.stakeMinor)}{' '}
           goes into the prize pool as your stake, and {formatNaira(round.feeMinor)} is the
           platform's app fee, kept regardless of the outcome.
         </p>
         <p>
           A round fills with exactly {round.capacity.toLocaleString()} entries. The instant the
-          last slot is taken, the round settles immediately and a new one opens right away —
-          rounds aren't on a timer, they fill whenever they fill.
+          last slot is taken, the round settles immediately and a new one opens right away.
+          Rounds aren't on a timer, they fill whenever they fill.
         </p>
       </Section>
 
@@ -91,7 +91,7 @@ export default function HowToPlay() {
           </div>
         </div>
         <p className="text-xs text-ink-muted">
-          The math always balances exactly — the winner's prize plus every refund adds up to the
+          The math always balances exactly: the winner's prize plus every refund adds up to the
           total stake collected from the round. The entries that lose are what funds the winner's
           payout beyond their own stake.
         </p>
@@ -99,7 +99,7 @@ export default function HowToPlay() {
 
       <Section title="3. Watch it happen live">
         <p>
-          Everyone looking at the Draw page sees the same round fill in real time — the ring
+          Everyone looking at the Draw page sees the same round fill in real time. The ring
           advances on every entry, not just your own. Once it's full, the numbers roll for a
           short suspense window before the winner's name, photo, and prize appear for everyone at
           once.
@@ -110,7 +110,7 @@ export default function HowToPlay() {
         <p>
           Fund your wallet by bank transfer or card, and spend from it to enter rounds. Every win,
           refund, deposit, and withdrawal is recorded as a permanent line in your wallet's
-          transaction history — you can always see exactly where every Naira came from or went.
+          transaction history. You can always see exactly where every Naira came from or went.
           Cash out to your bank account whenever you want.
         </p>
       </Section>
@@ -118,7 +118,7 @@ export default function HowToPlay() {
       <Section title="5. Daily leaderboard">
         <p>
           Separately from the draw, the top spenders each calendar day are ranked on the
-          Leaderboard page. The top 3 are gifted a cash prize, credited straight to their wallet —
+          Leaderboard page. The top 3 are gifted a cash prize, credited straight to their wallet,
           funded from platform fees, never from draw stake money.
         </p>
       </Section>

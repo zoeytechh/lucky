@@ -47,7 +47,7 @@ export default function Profile() {
   }
 
   return (
-    <main className="mx-auto max-w-sm px-5 py-8">
+    <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
       <h1 className="font-display text-xl uppercase tracking-wide text-ink">Profile</h1>
 
       <div className="mt-6 flex flex-col items-center">
