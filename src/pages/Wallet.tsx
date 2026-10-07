@@ -24,14 +24,21 @@ const typeLabel: Record<string, string> = {
 }
 
 export default function Wallet() {
-  const { balanceMinor, loading: balanceLoading } = useWallet()
+  const { balanceMinor, loading: balanceLoading, refresh } = useWallet()
   const [transactions, setTransactions] = useState<Transaction[] | null>(null)
 
+  // WalletContext only fetches on login/profile-complete — nothing else
+  // pushes balance changes to it, so a credit that lands between then
+  // and now (an admin/script top-up, a webhook, anything not driven by
+  // this session's own entry/reveal flow) never shows up here otherwise.
+  // The one screen whose entire job is "check your balance" should
+  // always ask the server fresh, not trust whatever's already cached.
   useEffect(() => {
+    refresh()
     apiFetch('/api/wallet/transactions?limit=20').then((res) =>
       setTransactions(res.transactions),
     )
-  }, [])
+  }, [refresh])
 
   return (
     <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">

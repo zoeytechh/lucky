@@ -6,7 +6,8 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { apiFetch } from './api'
+import { io } from 'socket.io-client'
+import { API_URL, apiFetch, getAccessToken } from './api'
 import { useAuth } from './AuthContext'
 
 type WalletState = {
@@ -44,6 +45,25 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (status === 'authenticated' && profileComplete) refresh()
   }, [status, profileComplete, refresh])
+
+  // Live push for any balance change not driven by this tab's own
+  // actions — an admin/script credit, a future Paystack deposit webhook,
+  // a payout landing while this tab is just sitting open elsewhere.
+  // `auth` as a function (not a static object), same reasoning as
+  // useCommentSocket: a reconnect re-reads whatever token is current
+  // rather than replaying one that may have since rotated.
+  useEffect(() => {
+    if (status !== 'authenticated' || !profileComplete) return
+    const socket = io(`${API_URL}/wallet`, {
+      auth: (cb) => cb({ token: getAccessToken() }),
+    })
+    socket.on('wallet:updated', (payload: { balanceMinor: string }) => {
+      setBalanceMinor(payload.balanceMinor)
+    })
+    return () => {
+      socket.disconnect()
+    }
+  }, [status, profileComplete])
 
   return (
     <WalletContext.Provider value={{ balanceMinor, loading, refresh }}>
