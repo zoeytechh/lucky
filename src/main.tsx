@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import App from './App.tsx'
+import UpdatePrompt from './components/UpdatePrompt'
 import './index.css'
 import { AuthProvider } from './lib/AuthContext'
 import { WalletProvider } from './lib/WalletContext'
@@ -36,6 +37,7 @@ createRoot(document.getElementById('root')!).render(
     <AuthProvider>
       <WalletProvider>
         <RouterProvider router={router} />
+        <UpdatePrompt />
       </WalletProvider>
     </AuthProvider>
   </StrictMode>,

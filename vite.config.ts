@@ -9,7 +9,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt', not 'autoUpdate' — autoUpdate reloads silently the
+      // moment a new service worker takes over, which only happens to be
+      // noticeable if the reload happens to land while nothing's being
+      // typed/mid-flow. An explicit "update available" banner (see
+      // UpdatePrompt.tsx) makes it visible and lets the viewer choose
+      // when to take it, instead of an invisible mechanism whose timing
+      // depends on exactly when the browser happens to re-check the SW.
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Lucky',
