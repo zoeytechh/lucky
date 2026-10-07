@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
+import { useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 /**
@@ -15,6 +16,45 @@ export default function UpdatePrompt() {
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW()
+  const [refreshing, setRefreshing] = useState(false)
+
+  // Two real bugs stacked here, found by actually simulating a deploy
+  // and clicking the button rather than trusting the library's types:
+  //
+  // 1. updateServiceWorker's `reloadPage` param has been a no-op since
+  //    vite-plugin-pwa 0.13.2 (its own type definition says so) — it
+  //    only activates the new worker and leaves reloading to the
+  //    caller, so passing `true` alone did nothing visible.
+  //
+  // 2. Awaiting updateServiceWorker() and then calling reload()
+  //    *immediately* still isn't enough — that promise resolves right
+  //    after the skip-waiting message is *sent*, not after the browser
+  //    actually finishes handing control to the new worker. Reloading
+  //    that fast is a real race: confirmed by rebuilding the app,
+  //    clicking Refresh, and inspecting the navigation response — it
+  //    came back `fromServiceWorker: true` serving the *old* precache,
+  //    even though the new worker's own cache already had the new one.
+  //    A `fetch()` to the same URL a moment later correctly got the new
+  //    content, proving the new worker does take over — just not
+  //    synchronously with updateServiceWorker()'s promise. Waiting for
+  //    the real `controllerchange` event before reloading closes that
+  //    gap; a timeout is a fallback only, in case it never fires.
+  async function handleRefresh() {
+    setRefreshing(true)
+    await new Promise<void>((resolve) => {
+      const timeout = setTimeout(resolve, 3000)
+      navigator.serviceWorker.addEventListener(
+        'controllerchange',
+        () => {
+          clearTimeout(timeout)
+          resolve()
+        },
+        { once: true },
+      )
+      updateServiceWorker(true)
+    })
+    window.location.reload()
+  }
 
   return (
     <AnimatePresence>
@@ -30,10 +70,11 @@ export default function UpdatePrompt() {
           </span>
           <button
             type="button"
-            onClick={() => updateServiceWorker(true)}
-            className="shrink-0 rounded-full bg-primary px-4 py-2 font-display text-xs text-primary-ink"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="shrink-0 rounded-full bg-primary px-4 py-2 font-display text-xs text-primary-ink disabled:opacity-60"
           >
-            REFRESH
+            {refreshing ? 'REFRESHING…' : 'REFRESH'}
           </button>
         </motion.div>
       )}
