@@ -7,7 +7,7 @@ const STEPS = [
   'Fund your wallet via bank transfer or card',
   'Enter the draw with ₦1,000 + ₦200 app fee',
   'Round fills, the winner is picked live',
-  'Win ₦500,000, get refunded ₦1,000, or lose it — then try again',
+  'Win ₦500,000, get refunded ₦1,000 and try again, or lose it and try again',
   'Cash out to your bank anytime',
 ]
 
