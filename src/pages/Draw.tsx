@@ -164,12 +164,19 @@ export default function Draw() {
         <motion.button
           type="button"
           onClick={handleEnter}
-          disabled={entering}
+          disabled={entering || !!myCurrentEntry}
           whileTap={{ scale: 0.95 }}
           className="mt-6 rounded-full bg-primary px-8 py-3 font-display text-base text-primary-ink shadow-[0_8px_22px_-8px_rgba(255,138,126,0.55)] disabled:opacity-60"
         >
-          {entering ? 'ENTERING…' : `ENTER — ${formatNaira(round.entryCostMinor)}`}
+          {myCurrentEntry
+            ? `YOU'RE IN — SLOT ${myCurrentEntry.slotNumber}`
+            : entering
+              ? 'ENTERING…'
+              : `ENTER — ${formatNaira(round.entryCostMinor)}`}
         </motion.button>
+        {myCurrentEntry && (
+          <p className="mt-2 text-xs text-ink-muted">Waiting for the draw to complete…</p>
+        )}
 
         <AnimatePresence>
           {confirmation && (

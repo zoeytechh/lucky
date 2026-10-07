@@ -17,6 +17,7 @@ const variants: Record<string, Variant> = {
   OTP_INVALID: { icon: AlertTriangleIcon, title: 'Incorrect code' },
   VALIDATION_ERROR: { icon: AlertTriangleIcon, title: 'Check your input' },
   PROFILE_INCOMPLETE: { icon: AlertTriangleIcon, title: 'Profile incomplete' },
+  ALREADY_ENTERED: { icon: ClockIcon, title: "You're already in" },
   default: { icon: AlertTriangleIcon, title: 'Something went wrong' },
 }
 
