@@ -21,7 +21,7 @@ export default function Login() {
   // both a genuine first-time visitor and a returning one whose session
   // expired and got redirected back here, since both are "about to log
   // in with no context on screen" from this component's point of view.
-  // Skipping just advances local state to 'phone'; there's deliberately
+  // Continuing just advances local state to 'phone'; there's deliberately
   // no persisted "seen it before" flag; re-mounting (a fresh /login visit)
   // shows it again, which is exactly the behavior asked for.
   const [step, setStep] = useState<'intro' | 'phone' | 'code'>('intro')
@@ -103,7 +103,7 @@ export default function Login() {
   }
 
   if (step === 'intro') {
-    return <LoginIntro onSkip={() => setStep('phone')} />
+    return <LoginIntro onContinue={() => setStep('phone')} />
   }
 
   return (

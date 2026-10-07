@@ -7,9 +7,10 @@ import PartyMascot from './PartyMascot'
  * a returning one whose session expired and needs to OTP in again (both
  * are "about to log in with no context on screen", so both see it). No
  * loading icon here, unlike SplashLoader — this isn't waiting on
- * anything, it's a deliberate screen the viewer reads or skips past.
+ * anything, it's a deliberate screen the viewer reads, then continues
+ * past.
  */
-export default function LoginIntro({ onSkip }: { onSkip: () => void }) {
+export default function LoginIntro({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center gap-8 px-6">
       <div className="flex items-center gap-2 font-display text-2xl tracking-wide text-primary">
@@ -21,10 +22,10 @@ export default function LoginIntro({ onSkip }: { onSkip: () => void }) {
 
       <button
         type="button"
-        onClick={onSkip}
+        onClick={onContinue}
         className="mt-2 w-full max-w-xs rounded-full bg-primary py-3 font-display text-sm text-primary-ink"
       >
-        SKIP
+        LET'S GO
       </button>
     </div>
   )
