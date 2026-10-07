@@ -1,34 +1,21 @@
-import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { motion } from 'motion/react'
 import Loader from './Loader'
 import PartyMascot from './PartyMascot'
 
-// Cycles through a real summary of the app — not just the draw mechanic —
-// since this screen can sit on a visitor's very first paint for a while
-// (a cold Render instance waking up, or just normal network latency
-// before the auth check resolves). Leads with what Lucky *is*, then
-// touches each core feature in turn, so someone who never gets past this
-// screen on a slow connection still walks away knowing what the app does.
-const FACTS = [
-  'Lucky — a real-money raffle. Enter, win, get paid instantly.',
-  '₦1,200 gets you in — one winner takes ₦500,000.',
-  'Half the round gets their full stake refunded.',
-  'Fund your wallet by bank transfer or card — cash out anytime.',
-  'Watch the draw live — everyone sees the winner the moment it settles.',
-  'Top spenders each day win a bonus on the leaderboard.',
-  'Jump into the live comment feed while you wait.',
+// The actual flow a new user goes through, in order — shown as a real
+// list rather than one swapping line, since "how does this app work"
+// is a sequence, not a set of interchangeable facts. Sits on screen for
+// however long the first paint takes (a cold Render instance waking up,
+// or just normal network latency before the auth check resolves).
+const STEPS = [
+  'Fund your wallet — bank transfer or card',
+  'Enter the draw — ₦1,200',
+  'Round fills, the winner is picked live',
+  'Win ₦500,000, get refunded, or try again',
+  'Cash out to your bank anytime',
 ]
 
-const ROTATE_MS = 2800
-
 export default function SplashLoader() {
-  const [factIndex, setFactIndex] = useState(0)
-
-  useEffect(() => {
-    const id = setInterval(() => setFactIndex((i) => (i + 1) % FACTS.length), ROTATE_MS)
-    return () => clearInterval(id)
-  }, [])
-
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-ground px-6">
       <div className="flex items-center gap-2 font-display text-2xl tracking-wide text-primary">
@@ -38,20 +25,22 @@ export default function SplashLoader() {
 
       <Loader size="lg" />
 
-      <div className="h-10 max-w-xs text-center">
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={factIndex}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.3 }}
-            className="text-xs leading-relaxed text-ink-muted"
+      <ol className="flex w-full max-w-xs flex-col gap-3">
+        {STEPS.map((step, i) => (
+          <motion.li
+            key={step}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35, delay: 0.15 * i }}
+            className="flex items-center gap-3"
           >
-            {FACTS[factIndex]}
-          </motion.p>
-        </AnimatePresence>
-      </div>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary font-display text-xs text-primary-ink">
+              {i + 1}
+            </span>
+            <span className="text-sm font-bold leading-snug text-ink">{step}</span>
+          </motion.li>
+        ))}
+      </ol>
     </div>
   )
 }
