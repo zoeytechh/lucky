@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import CommentFeed from '../components/CommentFeed'
 import DrawRoll from '../components/DrawRoll'
 import ErrorAlert from '../components/ErrorAlert'
 import { TrophyIcon } from '../components/icons'
@@ -330,6 +331,8 @@ export default function Draw() {
         </span>
         <span className="font-display text-lg text-primary">→</span>
       </Link>
+
+      <CommentFeed />
     </main>
   )
 }

@@ -6,6 +6,13 @@ export function setAccessToken(token: string | null) {
   accessToken = token
 }
 
+// Needed by useCommentSocket — the /comments namespace authenticates at
+// the socket handshake (socket.handshake.auth.token), not via a header,
+// so it needs to read the same token apiFetch already carries.
+export function getAccessToken(): string | null {
+  return accessToken
+}
+
 /**
  * Carries a machine-readable `code` alongside the human message, so UI
  * can render tailored copy/icon/actions per error type (see ErrorAlert)

@@ -4,6 +4,7 @@ import { motion } from 'motion/react'
 import AnimatedBalance from './components/AnimatedBalance'
 import Loader from './components/Loader'
 import MobileMenu from './components/MobileMenu'
+import PartyMascot from './components/PartyMascot'
 import { WalletIcon } from './components/icons'
 import { useAuth } from './lib/AuthContext'
 import { useWallet } from './lib/WalletContext'
@@ -60,8 +61,9 @@ function App() {
           >
             <HamburgerIcon />
           </button>
-          <NavLink to="/" className="font-display text-lg tracking-wide text-primary">
+          <NavLink to="/" className="flex items-center gap-1.5 font-display text-lg tracking-wide text-primary">
             LUCKY
+            <PartyMascot size={20} />
           </NavLink>
           <div className="hidden gap-5 sm:flex">
             <NavLink to="/" end className={navLinkClass}>

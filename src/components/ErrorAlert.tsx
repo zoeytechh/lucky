@@ -18,6 +18,7 @@ const variants: Record<string, Variant> = {
   VALIDATION_ERROR: { icon: AlertTriangleIcon, title: 'Check your input' },
   PROFILE_INCOMPLETE: { icon: AlertTriangleIcon, title: 'Profile incomplete' },
   ALREADY_ENTERED: { icon: ClockIcon, title: "You're already in" },
+  RATE_LIMIT: { icon: ClockIcon, title: 'Slow down' },
   default: { icon: AlertTriangleIcon, title: 'Something went wrong' },
 }
 
