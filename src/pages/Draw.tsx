@@ -364,7 +364,10 @@ export default function Draw() {
 
       <p className="mt-6 text-center text-xs leading-relaxed text-ink-muted">
         {round.capacity.toLocaleString()} entries a round. One winner takes half the pool. Half
-        of everyone else gets their stake back — the rest fund the winner.
+        of everyone else gets their stake back — the rest fund the winner.{' '}
+        <Link to="/how-to-play" className="text-primary underline">
+          How it works
+        </Link>
       </p>
 
       <div className="mt-8">

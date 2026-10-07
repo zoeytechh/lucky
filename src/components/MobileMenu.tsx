@@ -5,6 +5,7 @@ const links = [
   { to: '/', label: 'Draw', end: true },
   { to: '/wallet', label: 'Wallet', end: false },
   { to: '/leaderboard', label: 'Leaderboard', end: false },
+  { to: '/how-to-play', label: 'How to Play', end: false },
   { to: '/profile', label: 'Profile', end: false },
 ]
 

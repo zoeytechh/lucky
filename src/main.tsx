@@ -7,6 +7,7 @@ import './index.css'
 import { AuthProvider } from './lib/AuthContext'
 import { WalletProvider } from './lib/WalletContext'
 import Draw from './pages/Draw'
+import HowToPlay from './pages/HowToPlay'
 import Leaderboard from './pages/Leaderboard'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <Draw /> },
+      { path: 'how-to-play', element: <HowToPlay /> },
       { path: 'draw/recent', element: <RecentEntries /> },
       { path: 'draw/winners', element: <Winners /> },
       { path: 'wallet', element: <Wallet /> },

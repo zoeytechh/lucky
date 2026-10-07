@@ -74,6 +74,9 @@ function App() {
             <NavLink to="/leaderboard" className={navLinkClass}>
               Leaderboard
             </NavLink>
+            <NavLink to="/how-to-play" className={navLinkClass}>
+              How to Play
+            </NavLink>
           </div>
         </div>
         <div className="flex items-center gap-3">

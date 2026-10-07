@@ -13,9 +13,15 @@ import PartyMascot from './PartyMascot'
 export default function LoginIntro({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center gap-8 px-6">
-      <div className="flex items-center gap-2 font-display text-2xl tracking-wide text-primary">
-        LUCKY
-        <PartyMascot size={28} />
+      <div className="flex flex-col items-center gap-3 text-center">
+        <div className="flex items-center gap-2 font-display text-2xl tracking-wide text-primary">
+          LUCKY
+          <PartyMascot size={28} />
+        </div>
+        <p className="font-display text-xl uppercase leading-snug text-ink">
+          Stand a chance to win <span className="text-primary">₦500,000</span> with just{' '}
+          <span className="text-primary">₦1,000</span>
+        </p>
       </div>
 
       <AppFlowSteps />
