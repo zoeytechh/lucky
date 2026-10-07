@@ -6,6 +6,7 @@ import IosInstallBanner from './components/IosInstallBanner'
 import Loader from './components/Loader'
 import MobileMenu from './components/MobileMenu'
 import PartyMascot from './components/PartyMascot'
+import PullToRefresh from './components/PullToRefresh'
 import { WalletIcon } from './components/icons'
 import { useAuth } from './lib/AuthContext'
 import { useWallet } from './lib/WalletContext'
@@ -107,6 +108,7 @@ function App() {
       </nav>
 
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <PullToRefresh />
 
       <motion.div
         key={location.pathname}
