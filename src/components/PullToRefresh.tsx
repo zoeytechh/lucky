@@ -4,26 +4,33 @@ import { useEffect, useRef, useState } from 'react'
 const THRESHOLD = 70
 const MAX_PULL = 110
 
+// iOS-only: installed Android Chrome/WebAPK still offers its own native
+// pull-to-refresh in standalone mode, so a custom one there only doubles
+// up / conflicts with it. iOS Safari's "Add to Home Screen" standalone
+// mode is the one case with no native gesture at all.
+function isIos(): boolean {
+  return /iphone|ipad|ipod/i.test(window.navigator.userAgent)
+}
+
 function isStandalone(): boolean {
   const nav = window.navigator as Navigator & { standalone?: boolean }
   return nav.standalone === true || window.matchMedia('(display-mode: standalone)').matches
 }
 
 /**
- * An installed/standalone app has no native pull-to-refresh — iOS and
- * Android only offer that gesture inside an actual browser tab, which is
- * why it works in-browser but silently does nothing once the app is
- * added to the home screen. This recreates the gesture, but only when
- * running standalone; in a regular browser tab it stays completely
- * inert so it never fights or duplicates the native behavior that's
- * already working there.
+ * An installed iOS app has no native pull-to-refresh — Safari only
+ * offers that gesture inside an actual browser tab, which is why it
+ * works in-browser but silently does nothing once added to the home
+ * screen. This recreates the gesture, but only on iOS standalone; a
+ * regular browser tab (any platform) and installed Android both already
+ * have a working native gesture, so this stays completely inert there.
  */
 export default function PullToRefresh() {
   const [pull, setPull] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
   const startY = useRef<number | null>(null)
   const pullRef = useRef(0)
-  const standalone = useRef(isStandalone())
+  const standalone = useRef(isIos() && isStandalone())
 
   useEffect(() => {
     if (!standalone.current) return
