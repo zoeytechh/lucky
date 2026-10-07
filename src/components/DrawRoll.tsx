@@ -41,20 +41,26 @@ function BubbleParty() {
 }
 
 /**
- * Pure ambient flourish, not a claim about live multi-user state — there's
- * no websocket feed of other people's entries yet (that's M10), so the
- * "rolling" numbers are just a cycling animation suggesting the draw is in
- * motion, not a real-time view of other entrants. The one thing that *is*
- * real: if the viewer has their own entry in this round, their actual
- * slotNumber is woven into the cycle and held/highlighted when it comes up.
+ * The "rolling" numbers only animate while the round is genuinely full and
+ * waiting on the suspense-before-reveal window (see Draw.tsx's
+ * round:settled handling) — that's the one phase that's actually "the
+ * draw in motion". Earlier this animated unconditionally any time there
+ * was no winner yet, including while entries were still being collected,
+ * which read as "the draw is happening" when nothing actually was. While
+ * entries are still coming in, this shows a static state instead: the
+ * viewer's own slot number if they've entered, or just the entry count if
+ * they haven't.
  */
 export default function DrawRoll({ capacity, entered, mySlotNumber, winnerSlotNumber }: Props) {
+  const settled = winnerSlotNumber !== null
+  const isDrawing = !settled && entered >= capacity
+
   const [displayed, setDisplayed] = useState(mySlotNumber ?? 1)
   const [isMine, setIsMine] = useState(false)
   const holdUntil = useRef(0)
 
   useEffect(() => {
-    if (winnerSlotNumber !== null) return // stop rolling once settled
+    if (!isDrawing) return
 
     const tick = () => {
       if (Date.now() < holdUntil.current) return // mid-hold on the viewer's own number
@@ -72,9 +78,8 @@ export default function DrawRoll({ capacity, entered, mySlotNumber, winnerSlotNu
 
     const id = setInterval(tick, 130)
     return () => clearInterval(id)
-  }, [capacity, mySlotNumber, winnerSlotNumber])
+  }, [capacity, mySlotNumber, isDrawing])
 
-  const settled = winnerSlotNumber !== null
   const pct = Math.min(100, (entered / capacity) * 100)
   const youWon = settled && mySlotNumber !== null && mySlotNumber === winnerSlotNumber
 
@@ -111,7 +116,7 @@ export default function DrawRoll({ capacity, entered, mySlotNumber, winnerSlotNu
                 {youWon ? 'YOU WON!' : 'WINNER'}
               </span>
             </motion.div>
-          ) : (
+          ) : isDrawing ? (
             <motion.div
               key={displayed}
               initial={{ scale: 0.85, opacity: 0.4 }}
@@ -127,7 +132,26 @@ export default function DrawRoll({ capacity, entered, mySlotNumber, winnerSlotNu
                 {displayed}
               </span>
               <span className="mt-1.5 text-[10px] tracking-wider text-ink-muted">
-                {isMine ? 'YOUR NUMBER' : `OF ${capacity.toLocaleString()}`}
+                {isMine ? 'YOUR NUMBER' : 'DRAWING…'}
+              </span>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="waiting"
+              initial={{ scale: 0.85, opacity: 0.4 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.1 }}
+              className="flex flex-col items-center"
+            >
+              <span
+                className={`font-display text-[28px] leading-none tabular-nums ${
+                  mySlotNumber !== null ? 'text-secondary' : 'text-ink'
+                }`}
+              >
+                {mySlotNumber ?? entered}
+              </span>
+              <span className="mt-1.5 text-[10px] tracking-wider text-ink-muted">
+                {mySlotNumber !== null ? 'YOUR NUMBER' : `OF ${capacity.toLocaleString()}`}
               </span>
             </motion.div>
           )}
