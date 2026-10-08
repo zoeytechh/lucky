@@ -32,7 +32,7 @@ export default function CommentFeed() {
   const [draft, setDraft] = useState('')
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  const { incoming, post } = useCommentSocket()
+  const { incoming, clearedAt, post } = useCommentSocket()
   const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -48,6 +48,11 @@ export default function CommentFeed() {
       return [incoming, ...prev].slice(0, MAX_VISIBLE)
     })
   }, [incoming])
+
+  useEffect(() => {
+    if (clearedAt === null) return
+    setComments([])
+  }, [clearedAt])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

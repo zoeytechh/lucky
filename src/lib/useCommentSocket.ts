@@ -20,6 +20,7 @@ export type PostResult = { ok: true } | { ok: false; code: string; message: stri
  */
 export function useCommentSocket() {
   const [incoming, setIncoming] = useState<Comment | null>(null)
+  const [clearedAt, setClearedAt] = useState<number | null>(null)
   const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
@@ -28,6 +29,10 @@ export function useCommentSocket() {
     })
     socketRef.current = socket
     socket.on('comment:new', (comment: Comment) => setIncoming(comment))
+    // The daily reset job wiped the feed server-side — see
+    // jobs/dailyCommentReset.ts. Timestamp, not a boolean, so a second
+    // reset later in the session still triggers the effect that watches it.
+    socket.on('comment:cleared', () => setClearedAt(Date.now()))
     return () => {
       socket.disconnect()
     }
@@ -44,5 +49,5 @@ export function useCommentSocket() {
     })
   }
 
-  return { incoming, post }
+  return { incoming, clearedAt, post }
 }
