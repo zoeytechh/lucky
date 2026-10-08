@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import CommentFeed from '../components/CommentFeed'
 import DrawRoll from '../components/DrawRoll'
 import ErrorAlert from '../components/ErrorAlert'
-import { TrophyIcon } from '../components/icons'
+import { ChevronRightIcon, QuestionIcon, TrophyIcon } from '../components/icons'
 import Loader from '../components/Loader'
 import WinnerModal from '../components/WinnerModal'
 import { ApiError, apiFetch } from '../lib/api'
@@ -426,11 +426,24 @@ export default function Draw() {
 
       <p className="mt-6 text-center text-xs leading-relaxed text-ink-muted">
         {round.capacity.toLocaleString()} entries a round. One winner takes half the pool. Half
-        of everyone else gets their stake back. The rest fund the winner.{' '}
-        <Link to="/how-to-play" className="text-primary underline">
-          How it works
-        </Link>
+        of everyone else gets their stake back. The rest fund the winner.
       </p>
+
+      <Link
+        to="/how-to-play"
+        className="mt-4 flex items-center gap-3 rounded-lg border border-hairline bg-ground-raised px-4 py-3 text-ink transition-colors active:bg-ground"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ground text-primary">
+          <QuestionIcon size={18} />
+        </span>
+        <span className="flex-1">
+          <span className="block text-sm font-semibold">How it works</span>
+          <span className="block text-xs text-ink-muted">Entries, payouts, and the draw</span>
+        </span>
+        <span className="text-ink-muted">
+          <ChevronRightIcon size={18} />
+        </span>
+      </Link>
 
       <div className="mt-8">
         <div className="flex items-center justify-between">

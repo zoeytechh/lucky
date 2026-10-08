@@ -79,6 +79,35 @@ export function TrophyIcon({ size = 18 }: { size?: number }) {
   )
 }
 
+export function QuestionIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M6.8 7a2.2 2.2 0 1 1 3.4 1.8c-.6.4-1.2.8-1.2 1.7"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <circle cx="9" cy="13" r="0.9" fill="currentColor" />
+    </svg>
+  )
+}
+
+export function ChevronRightIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path
+        d="M6.5 3.5 12 9l-5.5 5.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export function AlertTriangleIcon({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
