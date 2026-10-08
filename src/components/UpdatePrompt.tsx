@@ -1,4 +1,3 @@
-// live deploy test — 2026-10-08
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
