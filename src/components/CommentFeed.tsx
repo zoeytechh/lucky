@@ -6,6 +6,12 @@ import ErrorAlert from './ErrorAlert'
 
 const MAX_VISIBLE = 100
 const MAX_BODY_LENGTH = 280
+const COMMENT_TTL_MS = 24 * 60 * 60 * 1000
+
+function dropExpired(comments: Comment[]): Comment[] {
+  const cutoff = Date.now() - COMMENT_TTL_MS
+  return comments.filter((c) => new Date(c.createdAt).getTime() > cutoff)
+}
 
 function timeAgo(iso: string): string {
   const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000))
@@ -32,12 +38,12 @@ export default function CommentFeed() {
   const [draft, setDraft] = useState('')
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  const { incoming, clearedAt, post } = useCommentSocket()
+  const { incoming, expiredIds, post } = useCommentSocket()
   const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     apiFetch(`/api/comments/recent?limit=${MAX_VISIBLE}`)
-      .then((res) => setComments(res.comments))
+      .then((res) => setComments(dropExpired(res.comments)))
       .finally(() => setLoading(false))
   }, [])
 
@@ -50,9 +56,18 @@ export default function CommentFeed() {
   }, [incoming])
 
   useEffect(() => {
-    if (clearedAt === null) return
-    setComments([])
-  }, [clearedAt])
+    if (!expiredIds || expiredIds.length === 0) return
+    setComments((prev) => prev.filter((c) => !expiredIds.includes(c.id)))
+  }, [expiredIds])
+
+  // Each comment's own 24h deadline, independent of the server's expiry
+  // sweep (which runs every 15 minutes — see jobs/commentExpiry.ts): this
+  // keeps what's on screen accurate to the second even in the gap before
+  // the server gets around to actually deleting a given row.
+  useEffect(() => {
+    const interval = setInterval(() => setComments((prev) => dropExpired(prev)), 30_000)
+    return () => clearInterval(interval)
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
