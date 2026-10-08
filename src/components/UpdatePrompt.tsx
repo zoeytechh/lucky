@@ -11,11 +11,25 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
  * silently reloading (registerType: 'prompt' in vite.config.ts) or
  * leaving the viewer to guess that a hard refresh might help.
  */
+// How often to ask the browser to re-fetch sw.js and compare it against
+// what's installed, while the app stays open with no navigation of its
+// own. Without this, the only thing that ever triggers that check is a
+// real page navigation (a reload, or leaving and coming back) — which is
+// exactly the gap that made this banner only ever show up late.
+const UPDATE_CHECK_INTERVAL_MS = 60_000
+
 export default function UpdatePrompt() {
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
-  } = useRegisterSW()
+  } = useRegisterSW({
+    onRegisteredSW(_swUrl, registration) {
+      if (!registration) return
+      setInterval(() => {
+        registration.update()
+      }, UPDATE_CHECK_INTERVAL_MS)
+    },
+  })
   const [refreshing, setRefreshing] = useState(false)
 
   // Two real bugs stacked here, found by actually simulating a deploy
