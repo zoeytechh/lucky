@@ -87,12 +87,13 @@ export default function WinnerModal({
         </button>
 
         <div className="flex justify-center">
-          <PartyMascot size={56} />
+          <PartyMascot size={64} dance />
         </div>
 
         <p className="mt-2 font-display text-sm uppercase tracking-[0.2em] text-primary">
           {isYou ? 'You won!' : 'We have a winner'}
         </p>
+        <p className="mt-1 font-display text-2xl uppercase text-success">Congratulations!</p>
 
         <div className="mx-auto mt-5 h-24 w-24 overflow-hidden rounded-full border-4 border-primary bg-ground-raised-2">
           {avatarUrl ? (
