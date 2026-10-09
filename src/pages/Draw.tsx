@@ -378,7 +378,7 @@ export default function Draw() {
           </p>
         ) : (
           <p className="mt-2 text-xs text-ink-muted">
-            {formatNaira(round.stakeMinor)} stake + {formatNaira(round.feeMinor)} app fee
+            {formatNaira(round.stakeMinor)} entry fee + {formatNaira(round.feeMinor)} app fee
           </p>
         )}
 
