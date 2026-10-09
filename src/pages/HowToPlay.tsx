@@ -51,7 +51,7 @@ export default function HowToPlay() {
 
   return (
     <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
-      <h1 className="font-display text-xl uppercase tracking-wide text-ink">How Lucky works</h1>
+      <h1 className="font-display text-xl uppercase tracking-wide text-ink">How Lucky You works</h1>
       <p className="mt-1 text-xs text-ink-muted">
         Everything that happens between paying your entry fee and seeing money in your wallet.
       </p>

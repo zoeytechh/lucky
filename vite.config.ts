@@ -19,8 +19,8 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Lucky',
-        short_name: 'Lucky',
+        name: 'Lucky You',
+        short_name: 'Lucky You',
         description: 'Enter the draw, win real cash.',
         theme_color: '#0b3d24',
         background_color: '#0b3d24',

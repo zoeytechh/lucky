@@ -61,7 +61,7 @@ function App() {
             <HamburgerIcon />
           </button>
           <NavLink to="/" className="flex items-center gap-1.5 font-display text-lg tracking-wide text-primary">
-            LUCKY
+            LUCKY YOU
             <PartyMascot size={20} />
           </NavLink>
           <div className="hidden gap-5 sm:flex">

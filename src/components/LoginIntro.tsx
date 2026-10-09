@@ -15,7 +15,7 @@ export default function LoginIntro({ onContinue }: { onContinue: () => void }) {
     <div className="flex min-h-[80vh] flex-col items-center justify-center gap-8 px-6">
       <div className="flex flex-col items-center gap-3 text-center">
         <div className="flex items-center gap-2 font-display text-2xl tracking-wide text-primary">
-          LUCKY
+          LUCKY YOU
           <PartyMascot size={28} />
         </div>
         <p className="max-w-70 font-body text-base font-extrabold leading-snug text-ink">

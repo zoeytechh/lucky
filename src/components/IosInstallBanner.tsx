@@ -56,7 +56,7 @@ export default function IosInstallBanner() {
             <IosShareIcon size={18} />
           </span>
           <p className="flex-1 text-xs leading-snug text-ink">
-            Install Lucky: tap <span className="text-primary">Share</span>, then{' '}
+            Install Lucky You: tap <span className="text-primary">Share</span>, then{' '}
             <span className="text-primary">Add to Home Screen</span>.
           </p>
           <button

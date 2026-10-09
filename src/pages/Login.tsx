@@ -109,7 +109,7 @@ export default function Login() {
   return (
     <main className="flex min-h-[80vh] items-center justify-center px-5">
       <div className="w-full max-w-xs text-center">
-        <span className="font-display text-2xl text-primary">LUCKY</span>
+        <span className="font-display text-2xl text-primary">LUCKY YOU</span>
 
         {step === 'phone' ? (
           <form onSubmit={handleSendCode}>

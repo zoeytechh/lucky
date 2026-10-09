@@ -38,7 +38,7 @@ export default function MobileMenu({
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
           >
             <span className="mb-6 font-display text-lg tracking-wide text-primary">
-              LUCKY
+              LUCKY YOU
             </span>
             {links.map((link) => (
               <NavLink
