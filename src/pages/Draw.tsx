@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import CommentFeed from '../components/CommentFeed'
 import DrawRoll from '../components/DrawRoll'
 import ErrorAlert from '../components/ErrorAlert'
-import { ChevronRightIcon, QuestionIcon, TrophyIcon } from '../components/icons'
+import { CheckCircleIcon, ChevronRightIcon, QuestionIcon, TrophyIcon } from '../components/icons'
 import Loader from '../components/Loader'
 import WinnerModal from '../components/WinnerModal'
 import { ApiError, apiFetch } from '../lib/api'
@@ -339,6 +339,22 @@ export default function Draw() {
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {confirmation && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-x-4 top-20 z-30 mx-auto flex max-w-sm items-center gap-3 rounded-xl bg-ground-raised-2 px-4 py-3 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] sm:max-w-xs"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
+              <CheckCircleIcon size={18} />
+            </span>
+            <span className="text-xs font-bold leading-snug text-ink">{confirmation}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col items-center text-center">
         <span className="mb-4 text-[11px] uppercase tracking-[0.15em] text-ink-muted">
           {pendingSettlement
@@ -382,18 +398,6 @@ export default function Draw() {
           </p>
         )}
 
-        <AnimatePresence>
-          {confirmation && (
-            <motion.p
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mt-3 text-xs text-success"
-            >
-              {confirmation}
-            </motion.p>
-          )}
-        </AnimatePresence>
         <AnimatePresence>
           {error && (
             <div className="mt-3 w-full">

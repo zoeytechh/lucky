@@ -108,6 +108,21 @@ export function ChevronRightIcon({ size = 18 }: { size?: number }) {
   )
 }
 
+export function CheckCircleIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M6 9.2 8.1 11.3 12.3 7"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export function AlertTriangleIcon({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
