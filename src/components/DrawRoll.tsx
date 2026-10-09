@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, animate, motion, useMotionValue, useTransform } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
 type Props = {
@@ -8,7 +8,20 @@ type Props = {
   mySlotNumber: number | null
   /** Set once the round has settled — switches from "rolling" to "reveal". */
   winnerSlotNumber: number | null
+  /**
+   * The server-decided instant the winner reveals, ISO string — drives the
+   * ring's color countdown while isDrawing (see below). Same instant every
+   * viewer converges on, live or late-joining, so the ring doubles as an
+   * honest shared timer rather than a per-client guess.
+   */
+  revealAt: string | null
 }
+
+// Must match --color-primary in index.css — hardcoded because Motion's
+// color interpolation needs a literal value to animate between, not a
+// CSS custom property reference.
+const RING_GOLD = '#e8b63e'
+const RING_WHITE = '#ffffff'
 
 const BUBBLES = Array.from({ length: 14 }, (_, i) => ({
   id: i,
@@ -51,9 +64,29 @@ function BubbleParty() {
  * viewer's own slot number if they've entered, or just the entry count if
  * they haven't.
  */
-export default function DrawRoll({ capacity, entered, mySlotNumber, winnerSlotNumber }: Props) {
+export default function DrawRoll({ capacity, entered, mySlotNumber, winnerSlotNumber, revealAt }: Props) {
   const settled = winnerSlotNumber !== null
   const isDrawing = !settled && entered >= capacity
+
+  // Counts from gold to white over exactly the time remaining until
+  // revealAt, so the ring itself is a visual countdown — it finishes
+  // turning white right as the winner reveals, instead of staying a
+  // static filled ring with no sense of when the draw will conclude.
+  // Starting the animation fresh whenever isDrawing/revealAt changes
+  // means a late joiner's ring still converges on the same instant
+  // everyone else's does, just over whatever time is left from here.
+  const ringProgress = useMotionValue(0)
+  useEffect(() => {
+    if (!isDrawing || !revealAt) {
+      ringProgress.set(0)
+      return
+    }
+    const durationSec = Math.max(0, (new Date(revealAt).getTime() - Date.now()) / 1000)
+    const controls = animate(ringProgress, 1, { duration: durationSec, ease: 'linear' })
+    return () => controls.stop()
+  }, [isDrawing, revealAt, ringProgress])
+  const ringColor = useTransform(ringProgress, [0, 1], [RING_GOLD, RING_WHITE])
+  const drawingBackground = useTransform(ringColor, (c) => `conic-gradient(${c} 0% 100%, ${c} 100%)`)
 
   const [displayed, setDisplayed] = useState(mySlotNumber ?? 1)
   const [isMine, setIsMine] = useState(false)
@@ -94,6 +127,9 @@ export default function DrawRoll({ capacity, entered, mySlotNumber, winnerSlotNu
           : `conic-gradient(var(--color-primary) 0% ${pct}%, rgba(244,239,222,0.14) ${pct}% 100%)`,
       }}
     >
+      {isDrawing && (
+        <motion.div className="absolute inset-0 rounded-full" style={{ background: drawingBackground }} />
+      )}
       {settled && <BubbleParty />}
       <div className="relative flex h-[114px] w-[114px] flex-col items-center justify-center rounded-full bg-ground">
         <AnimatePresence mode="wait">

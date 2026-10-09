@@ -369,6 +369,7 @@ export default function Draw() {
           entered={pendingSettlement ? round.capacity : round.entryCount}
           mySlotNumber={myCurrentEntry?.slotNumber ?? null}
           winnerSlotNumber={revealWinnerSlot}
+          revealAt={pendingSettlement?.revealAt ?? null}
         />
 
         <motion.button

@@ -9,7 +9,7 @@ import { motion } from 'motion/react'
  * not triggered by any app state) — "automatic movement", not a reaction
  * to anything.
  */
-export default function PartyMascot({ size = 22 }: { size?: number }) {
+export default function PartyMascot({ size = 22, dance = false }: { size?: number; dance?: boolean }) {
   return (
     <motion.svg
       width={size}
@@ -18,8 +18,15 @@ export default function PartyMascot({ size = 22 }: { size?: number }) {
       fill="none"
       aria-hidden="true"
       className="text-primary"
-      animate={{ y: [0, -3, 0], rotate: [-6, 6, -6] }}
-      transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+      animate={
+        // A bigger, faster version of the same loop for the winner
+        // celebration — the nav's own gentle sway would read as too
+        // subdued for "someone just won real money."
+        dance
+          ? { y: [0, -9, 0, -5, 0], rotate: [-22, 22, -16, 16, 0], scale: [1, 1.1, 1, 1.06, 1] }
+          : { y: [0, -3, 0], rotate: [-6, 6, -6] }
+      }
+      transition={{ duration: dance ? 0.85 : 1.4, repeat: Infinity, ease: 'easeInOut' }}
     >
       <circle cx="11" cy="4.6" r="2.1" fill="currentColor" />
       <path
