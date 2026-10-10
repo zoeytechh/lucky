@@ -1,4 +1,4 @@
-import { AnimatePresence, animate, motion, useMotionValue, useTransform } from 'motion/react'
+import { AnimatePresence, animate, motion, useMotionValue } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
 type Props = {
@@ -17,11 +17,18 @@ type Props = {
   revealAt: string | null
 }
 
-// Must match --color-primary in index.css — hardcoded because Motion's
-// color interpolation needs a literal value to animate between, not a
-// CSS custom property reference.
+// Must match --color-primary in index.css — hardcoded rather than read
+// from the CSS variable since these feed an SVG stroke attribute, not a
+// Tailwind class.
 const RING_GOLD = '#e8b63e'
 const RING_WHITE = '#ffffff'
+
+// Ring geometry for the SVG progress sweep below — sized to exactly
+// overlay the existing 148px conic-gradient ring with the same band
+// thickness (148px outer / 114px inner hole = 17px band).
+const RING_SIZE = 148
+const RING_RADIUS = 65.5
+const RING_STROKE_WIDTH = 17
 
 const BUBBLES = Array.from({ length: 14 }, (_, i) => ({
   id: i,
@@ -68,25 +75,24 @@ export default function DrawRoll({ capacity, entered, mySlotNumber, winnerSlotNu
   const settled = winnerSlotNumber !== null
   const isDrawing = !settled && entered >= capacity
 
-  // Counts from gold to white over exactly the time remaining until
-  // revealAt, so the ring itself is a visual countdown — it finishes
-  // turning white right as the winner reveals, instead of staying a
-  // static filled ring with no sense of when the draw will conclude.
-  // Starting the animation fresh whenever isDrawing/revealAt changes
-  // means a late joiner's ring still converges on the same instant
-  // everyone else's does, just over whatever time is left from here.
-  const ringProgress = useMotionValue(0)
+  // A literal progress ring — a white stroke sweeps clockwise from 12
+  // o'clock over the gold one underneath, fully covering it exactly as
+  // revealAt arrives. dashoffset runs 100 (fully hidden) to 0 (fully
+  // drawn) on a 0-100 pathLength, so the math doesn't depend on the
+  // circle's actual radius. Starting the animation fresh whenever
+  // isDrawing/revealAt changes means a late joiner's ring still finishes
+  // at the exact same instant everyone else's does, just swept over
+  // whatever time is left from here, not a fixed total duration.
+  const dashOffset = useMotionValue(100)
   useEffect(() => {
     if (!isDrawing || !revealAt) {
-      ringProgress.set(0)
+      dashOffset.set(100)
       return
     }
     const durationSec = Math.max(0, (new Date(revealAt).getTime() - Date.now()) / 1000)
-    const controls = animate(ringProgress, 1, { duration: durationSec, ease: 'linear' })
+    const controls = animate(dashOffset, 0, { duration: durationSec, ease: 'linear' })
     return () => controls.stop()
-  }, [isDrawing, revealAt, ringProgress])
-  const ringColor = useTransform(ringProgress, [0, 1], [RING_GOLD, RING_WHITE])
-  const drawingBackground = useTransform(ringColor, (c) => `conic-gradient(${c} 0% 100%, ${c} 100%)`)
+  }, [isDrawing, revealAt, dashOffset])
 
   const [displayed, setDisplayed] = useState(mySlotNumber ?? 1)
   const [isMine, setIsMine] = useState(false)
@@ -128,7 +134,33 @@ export default function DrawRoll({ capacity, entered, mySlotNumber, winnerSlotNu
       }}
     >
       {isDrawing && (
-        <motion.div className="absolute inset-0 rounded-full" style={{ background: drawingBackground }} />
+        <svg
+          width={RING_SIZE}
+          height={RING_SIZE}
+          viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
+          className="absolute inset-0"
+          style={{ transform: 'rotate(-90deg)' }}
+        >
+          <circle
+            cx={RING_SIZE / 2}
+            cy={RING_SIZE / 2}
+            r={RING_RADIUS}
+            fill="none"
+            stroke={RING_GOLD}
+            strokeWidth={RING_STROKE_WIDTH}
+          />
+          <motion.circle
+            cx={RING_SIZE / 2}
+            cy={RING_SIZE / 2}
+            r={RING_RADIUS}
+            fill="none"
+            stroke={RING_WHITE}
+            strokeWidth={RING_STROKE_WIDTH}
+            pathLength={100}
+            strokeDasharray={100}
+            style={{ strokeDashoffset: dashOffset }}
+          />
+        </svg>
       )}
       {settled && <BubbleParty />}
       <div className="relative flex h-[114px] w-[114px] flex-col items-center justify-center rounded-full bg-ground">
