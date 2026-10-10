@@ -97,6 +97,11 @@ export default function Draw() {
   const [entering, setEntering] = useState(false)
   const [error, setError] = useState<ApiError | Error | null>(null)
   const [confirmation, setConfirmation] = useState<string | null>(null)
+  // Gates the actual entry behind an explicit yes/no — a real-money
+  // charge shouldn't fire off a single accidental tap. See the
+  // confirm-entry dialog JSX below; handleEnter only ever runs once this
+  // has been answered "yes".
+  const [confirmingEntry, setConfirmingEntry] = useState(false)
   const [revealWinnerSlot, setRevealWinnerSlot] = useState<number | null>(null)
   // Fed by either the live socket broadcast or, directly, by this user's
   // own POST /api/draw/entries response when it's the one that settles
@@ -340,6 +345,55 @@ export default function Draw() {
       </AnimatePresence>
 
       <AnimatePresence>
+        {confirmingEntry && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-ground/80 px-6 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setConfirmingEntry(false)}
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Confirm entry"
+              className="relative w-full max-w-xs rounded-3xl bg-ground-raised px-6 py-7 text-center shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)]"
+              initial={{ scale: 0.85, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 8 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="font-display text-lg uppercase text-ink">Enter this draw?</p>
+              <p className="mt-2 text-sm text-ink-muted">
+                You'll be charged {formatNaira(round.entryCostMinor)} — {formatNaira(round.stakeMinor)}{' '}
+                entry fee + {formatNaira(round.feeMinor)} app fee.
+              </p>
+              <div className="mt-5 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirmingEntry(false)}
+                  className="flex-1 rounded-full bg-ground-raised-2 py-2.5 font-display text-sm text-ink"
+                >
+                  CANCEL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmingEntry(false)
+                    handleEnter()
+                  }}
+                  className="flex-1 rounded-full bg-primary py-2.5 font-display text-sm text-primary-ink"
+                >
+                  YES, ENTER
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {confirmation && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -374,7 +428,7 @@ export default function Draw() {
 
         <motion.button
           type="button"
-          onClick={handleEnter}
+          onClick={() => setConfirmingEntry(true)}
           disabled={entering || !!myCurrentEntry || drawInProgress}
           whileTap={{ scale: 0.95 }}
           className="mt-6 rounded-full bg-primary px-8 py-3 font-display text-base text-primary-ink shadow-[0_8px_22px_-8px_rgba(255,138,126,0.55)] disabled:opacity-60"
