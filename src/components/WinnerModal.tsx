@@ -93,9 +93,21 @@ export default function WinnerModal({
         <p className="mt-2 font-display text-sm uppercase tracking-[0.2em] text-primary">
           {isYou ? 'You won!' : 'We have a winner'}
         </p>
-        <p className="mt-1 font-display text-2xl uppercase text-success">Congratulations!</p>
+        <motion.p
+          className="mt-1 font-display text-2xl uppercase text-success"
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 320, damping: 16, delay: 0.15 }}
+        >
+          Congratulations!
+        </motion.p>
 
-        <div className="mx-auto mt-5 h-24 w-24 overflow-hidden rounded-full border-4 border-primary bg-ground-raised-2">
+        <motion.div
+          className="mx-auto mt-5 h-24 w-24 overflow-hidden rounded-full border-4 border-primary bg-ground-raised-2"
+          initial={{ opacity: 0, scale: 0.6, rotate: -8 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 14, delay: 0.28 }}
+        >
           {avatarUrl ? (
             <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
           ) : (
@@ -103,25 +115,54 @@ export default function WinnerModal({
               {displayName.replace(/•/g, '').charAt(0).toUpperCase()}
             </div>
           )}
-        </div>
+        </motion.div>
 
-        <p className="mt-4 font-display text-xl uppercase text-ink">{displayName}</p>
-        <p className="mt-1 text-xs text-ink-muted">Slot {slotNumber}</p>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <p className="mt-4 font-display text-xl uppercase text-ink">{displayName}</p>
+          <p className="mt-1 text-xs text-ink-muted">Slot {slotNumber}</p>
+        </motion.div>
 
-        <div className="mt-5 rounded-2xl bg-ground px-4 py-3">
+        <motion.div
+          className="mt-5 rounded-2xl bg-ground px-4 py-3"
+          initial={{ opacity: 0, y: 10, scale: 0.9 }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            scale: [0.9, 1.05, 1],
+            boxShadow: [
+              '0 0 0px 0px rgba(127,217,166,0)',
+              '0 0 18px 4px rgba(127,217,166,0.35)',
+              '0 0 0px 0px rgba(127,217,166,0)',
+            ],
+          }}
+          transition={{
+            opacity: { delay: 0.52, duration: 0.3 },
+            y: { delay: 0.52, duration: 0.3 },
+            scale: { delay: 0.52, duration: 0.5 },
+            boxShadow: { delay: 0.8, duration: 1.8, repeat: Infinity, ease: 'easeInOut' },
+          }}
+        >
           <span className="block font-display text-2xl text-success">{formatNaira(payoutMinor)}</span>
           <span className="mt-0.5 block text-[10px] uppercase tracking-wider text-ink-muted">
             Prize won
           </span>
-        </div>
+        </motion.div>
 
-        <button
+        <motion.button
           type="button"
           onClick={onClose}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65 }}
           className="mt-6 w-full rounded-full bg-primary py-2.5 font-display text-sm text-primary-ink"
         >
           NICE!
-        </button>
+        </motion.button>
       </motion.div>
     </motion.div>
   )
