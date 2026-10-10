@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { apiFetch, refreshSession, setAccessToken } from './api'
+import { apiFetch, restoreSession, setAccessToken } from './api'
 
 export type User = {
   id: string
@@ -32,15 +32,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthState['status']>('loading')
   const [user, setUser] = useState<User | null>(null)
 
-  // On load, try to restore a session from the httpOnly refresh cookie —
-  // the access token itself is never persisted client-side.
+  // On load, try to restore a session — normally via the httpOnly refresh
+  // cookie, or via a token stashed just before an app-triggered reload
+  // (see api.ts's restoreSession/stashAccessTokenForReload and
+  // UpdatePrompt.tsx) when the cookie-based path has been seen to fail
+  // right after that specific reload, notably on iOS. The access token
+  // itself is otherwise never persisted client-side.
   useEffect(() => {
     ;(async () => {
       try {
-        const { accessToken } = await refreshSession()
-        setAccessToken(accessToken)
-        const { user } = await apiFetch('/api/auth/me')
-        setUser(user)
+        const { user } = await restoreSession()
+        setUser(user as User)
         setStatus('authenticated')
       } catch {
         setAccessToken(null)

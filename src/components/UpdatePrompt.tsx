@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { stashAccessTokenForReload } from '../lib/api'
 
 /**
  * Surfaces exactly the gap that's been causing confusion after every
@@ -55,6 +56,12 @@ export default function UpdatePrompt() {
   //    gap; a timeout is a fallback only, in case it never fires.
   async function handleRefresh() {
     setRefreshing(true)
+    // Carries the current, still-valid session across this reload — see
+    // api.ts's stashAccessTokenForReload for why: the normal cookie-based
+    // silent refresh has been seen to fail specifically on iOS right
+    // after this exact reload, which was dropping an otherwise mid-
+    // session user back to the login screen instead of just refreshing.
+    stashAccessTokenForReload()
     await new Promise<void>((resolve) => {
       const timeout = setTimeout(resolve, 3000)
       navigator.serviceWorker.addEventListener(
