@@ -141,7 +141,7 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
           return
         }
         if (current.roundId && current.entryCount < current.capacity) {
-          const threshold = Math.min(current.capacity - 1, Math.floor(current.capacity * 0.9))
+          const threshold = Math.floor(current.capacity * 0.9)
           if (
             current.entryCount >= threshold &&
             !almostFullNotifiedRoundIds.current.has(current.roundId)
@@ -195,16 +195,12 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
     if (settled) enqueueSettlement(settled)
   }, [settled, enqueueSettlement])
 
-  // Fires once per round, the first time entryCount crosses whichever's
-  // earlier of "one slot left" or 90% full — the former matters for a
-  // small test-size round (e.g. 3 of 4), the latter gives a meaningful
-  // head start on a real 1000-entry one (900 of 1000), instead of a
-  // threshold that's effectively "already full" either way.
+  // Fires once per round, the first time entryCount crosses 90% full.
   useEffect(() => {
     if (!progress) return
     if (almostFullNotifiedRoundIds.current.has(progress.roundId)) return
     if (progress.entryCount >= progress.capacity) return
-    const threshold = Math.min(progress.capacity - 1, Math.floor(progress.capacity * 0.9))
+    const threshold = Math.floor(progress.capacity * 0.9)
     if (progress.entryCount < threshold) return
     almostFullNotifiedRoundIds.current.add(progress.roundId)
     setAlmostFull(progress)
