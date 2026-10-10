@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import AnimatedBalance from '../components/AnimatedBalance'
 import Loader from '../components/Loader'
+import Paginator from '../components/Paginator'
 import { apiFetch } from '../lib/api'
 import { formatNaira } from '../lib/money'
 import { useWallet } from '../lib/WalletContext'
@@ -23,9 +24,19 @@ const typeLabel: Record<string, string> = {
   WITHDRAWAL_REVERSAL: 'Withdrawal reversed',
 }
 
+const PAGE_SIZE = 20
+
 export default function Wallet() {
   const { balanceMinor, loading: balanceLoading, refresh } = useWallet()
   const [transactions, setTransactions] = useState<Transaction[] | null>(null)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+
+  const loadPage = useCallback(async (p: number) => {
+    const res = await apiFetch(`/api/wallet/transactions?page=${p}&pageSize=${PAGE_SIZE}`)
+    setTransactions(res.transactions)
+    setTotal(res.total)
+  }, [])
 
   // WalletContext only fetches on login/profile-complete — nothing else
   // pushes balance changes to it, so a credit that lands between then
@@ -35,10 +46,13 @@ export default function Wallet() {
   // always ask the server fresh, not trust whatever's already cached.
   useEffect(() => {
     refresh()
-    apiFetch('/api/wallet/transactions?limit=20').then((res) =>
-      setTransactions(res.transactions),
-    )
   }, [refresh])
+
+  useEffect(() => {
+    loadPage(page)
+  }, [page, loadPage])
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   return (
     <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
@@ -122,6 +136,10 @@ export default function Wallet() {
             )
           })}
         </div>
+      )}
+
+      {transactions !== null && transactions.length > 0 && (
+        <Paginator page={page} totalPages={totalPages} onChange={setPage} />
       )}
     </main>
   )

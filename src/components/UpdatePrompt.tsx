@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { stashAccessTokenForReload } from '../lib/api'
 
@@ -20,18 +20,40 @@ import { stashAccessTokenForReload } from '../lib/api'
 const UPDATE_CHECK_INTERVAL_MS = 60_000
 
 export default function UpdatePrompt() {
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegisteredSW(_swUrl, registration) {
-      if (!registration) return
+    onRegisteredSW(_swUrl, reg) {
+      if (!reg) return
+      setRegistration(reg)
       setInterval(() => {
-        registration.update()
+        reg.update()
       }, UPDATE_CHECK_INTERVAL_MS)
     },
   })
   const [refreshing, setRefreshing] = useState(false)
+
+  // The interval above is the baseline, but a backgrounded/minimized tab
+  // has its timers throttled or fully paused by the browser — exactly
+  // the case that matters most here (someone reopening an app they left
+  // running for a while), so the interval alone can miss it for a long
+  // stretch. This catches up the moment the tab actually becomes visible
+  // or regains focus again, instead of waiting on a throttled timer or a
+  // full navigation to trigger the check.
+  useEffect(() => {
+    if (!registration) return
+    function checkNow() {
+      if (document.visibilityState === 'visible') registration!.update()
+    }
+    document.addEventListener('visibilitychange', checkNow)
+    window.addEventListener('focus', checkNow)
+    return () => {
+      document.removeEventListener('visibilitychange', checkNow)
+      window.removeEventListener('focus', checkNow)
+    }
+  }, [registration])
 
   // Two real bugs stacked here, found by actually simulating a deploy
   // and clicking the button rather than trusting the library's types:

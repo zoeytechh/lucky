@@ -257,7 +257,7 @@ export default function Draw() {
               <p className="font-display text-lg uppercase text-ink">Enter this draw?</p>
               <p className="mt-2 text-sm text-ink-muted">
                 You'll be charged {formatNaira(round.entryCostMinor)} — {formatNaira(round.stakeMinor)}{' '}
-                entry charge + {formatNaira(round.feeMinor)} app charge.
+                entry fee + {formatNaira(round.feeMinor)} app charge.
               </p>
               <div className="mt-5 flex gap-3">
                 <button
@@ -341,7 +341,7 @@ export default function Draw() {
           </p>
         ) : (
           <p className="mt-2 text-xs text-ink-muted">
-            {formatNaira(round.stakeMinor)} entry charge + {formatNaira(round.feeMinor)} app charge
+            {formatNaira(round.stakeMinor)} entry fee + {formatNaira(round.feeMinor)} app charge
           </p>
         )}
 
