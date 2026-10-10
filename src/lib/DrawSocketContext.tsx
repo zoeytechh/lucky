@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { useLocation } from 'react-router-dom'
 import AlmostFullToast from '../components/AlmostFullToast'
+import DrawStartedToast from '../components/DrawStartedToast'
 import WinnerModal from '../components/WinnerModal'
 import WinnerToast from '../components/WinnerToast'
 import { apiFetch } from './api'
@@ -90,6 +91,15 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
   // instead. null = not yet determined, so neither copy renders until
   // this resolves.
   const [isAlmostFullEntrant, setIsAlmostFullEntrant] = useState<boolean | null>(null)
+
+  // "Draw started" — the literal "it's full now" moment, distinct from
+  // the almost-full nudge above (which fires one entry early — a real
+  // gap at the actual 1000-entry round size, not just the small testing
+  // one). Entrant-only: someone who never joined this round has nothing
+  // to watch for here.
+  const [drawStarted, setDrawStarted] = useState<RoundProgress | null>(null)
+  const drawStartedNotifiedRoundIds = useRef(new Set<string>())
+  const [isDrawStartedEntrant, setIsDrawStartedEntrant] = useState<boolean | null>(null)
 
   const enqueueSettlement = useCallback((s: RoundSettled) => {
     if (queuedRoundIds.current.has(s.roundId)) return
@@ -200,6 +210,17 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
     setAlmostFull(progress)
   }, [progress])
 
+  // Fires once per round, the instant entryCount actually reaches
+  // capacity — the moment the almost-full nudge above was only ever a
+  // heads-up for.
+  useEffect(() => {
+    if (!progress) return
+    if (drawStartedNotifiedRoundIds.current.has(progress.roundId)) return
+    if (progress.entryCount < progress.capacity) return
+    drawStartedNotifiedRoundIds.current.add(progress.roundId)
+    setDrawStarted(progress)
+  }, [progress])
+
   // Pulls the next queued settlement once nothing is currently being
   // revealed — each queued round gets its own full suspense+reveal
   // cycle, processed one at a time, none dropped.
@@ -288,6 +309,30 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
     }
   }, [almostFull])
 
+  // Same check again, for the draw-started toast — entrant-only, so this
+  // doubles as the render gate (non-entrants get null/false and never
+  // see it at all, unlike almostFull's tri-state which still renders
+  // either way just with different copy).
+  useEffect(() => {
+    if (!drawStarted) {
+      setIsDrawStartedEntrant(null)
+      return
+    }
+    setIsDrawStartedEntrant(null)
+    let cancelled = false
+    apiFetch('/api/draw/entries?limit=5')
+      .then(({ entries }: { entries: { roundId: string }[] }) => {
+        if (cancelled) return
+        setIsDrawStartedEntrant(entries.some((e) => e.roundId === drawStarted.roundId))
+      })
+      .catch(() => {
+        if (!cancelled) setIsDrawStartedEntrant(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [drawStarted])
+
   return (
     <DrawSocketContext.Provider value={{ progress, pendingSettlement, revealWinnerSlot, enqueueSettlement }}>
       {children}
@@ -324,6 +369,15 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
             capacity={almostFull.capacity}
             youAreIn={isAlmostFullEntrant}
             onClose={() => setAlmostFull(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {drawStarted && !onDrawPage && isDrawStartedEntrant === true && (
+          <DrawStartedToast
+            roundNumber={drawStarted.roundNumber}
+            onClose={() => setDrawStarted(null)}
           />
         )}
       </AnimatePresence>
