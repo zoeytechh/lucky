@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useLocation } from 'react-router-dom'
+import AlmostFullToast from '../components/AlmostFullToast'
 import WinnerModal from '../components/WinnerModal'
 import WinnerToast from '../components/WinnerToast'
 import { apiFetch } from './api'
@@ -79,6 +80,12 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
   const [isYouWin, setIsYouWin] = useState<boolean | null>(null)
   const announcedRoundIds = useRef(new Set<string>())
 
+  // "Almost full" — the other half of the notification ask, alongside
+  // the winner announcement above: a nudge to come join before a round
+  // closes, for anyone not already looking at the ring fill up live.
+  const [almostFull, setAlmostFull] = useState<RoundProgress | null>(null)
+  const almostFullNotifiedRoundIds = useRef(new Set<string>())
+
   const enqueueSettlement = useCallback((s: RoundSettled) => {
     if (queuedRoundIds.current.has(s.roundId)) return
     queuedRoundIds.current.add(s.roundId)
@@ -117,6 +124,21 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
             nextEntriesOpenAt: current.entriesOpenAt,
           })
           return
+        }
+        if (current.roundId && current.entryCount < current.capacity) {
+          const threshold = Math.min(current.capacity - 1, Math.floor(current.capacity * 0.9))
+          if (
+            current.entryCount >= threshold &&
+            !almostFullNotifiedRoundIds.current.has(current.roundId)
+          ) {
+            almostFullNotifiedRoundIds.current.add(current.roundId)
+            setAlmostFull({
+              roundId: current.roundId,
+              roundNumber: current.roundNumber,
+              entryCount: current.entryCount,
+              capacity: current.capacity,
+            })
+          }
         }
       } catch {
         // a failed catch-up check shouldn't block the rest of the app
@@ -157,6 +179,21 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (settled) enqueueSettlement(settled)
   }, [settled, enqueueSettlement])
+
+  // Fires once per round, the first time entryCount crosses whichever's
+  // earlier of "one slot left" or 90% full — the former matters for a
+  // small test-size round (e.g. 3 of 4), the latter gives a meaningful
+  // head start on a real 1000-entry one (900 of 1000), instead of a
+  // threshold that's effectively "already full" either way.
+  useEffect(() => {
+    if (!progress) return
+    if (almostFullNotifiedRoundIds.current.has(progress.roundId)) return
+    if (progress.entryCount >= progress.capacity) return
+    const threshold = Math.min(progress.capacity - 1, Math.floor(progress.capacity * 0.9))
+    if (progress.entryCount < threshold) return
+    almostFullNotifiedRoundIds.current.add(progress.roundId)
+    setAlmostFull(progress)
+  }, [progress])
 
   // Pulls the next queued settlement once nothing is currently being
   // revealed — each queued round gets its own full suspense+reveal
@@ -247,6 +284,17 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
             avatarUrl={announcement.winnerAvatarUrl}
             payoutMinor={announcement.winnerPayoutMinor}
             onClose={() => setAnnouncement(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {almostFull && !onDrawPage && (
+          <AlmostFullToast
+            roundNumber={almostFull.roundNumber}
+            entryCount={almostFull.entryCount}
+            capacity={almostFull.capacity}
+            onClose={() => setAlmostFull(null)}
           />
         )}
       </AnimatePresence>
