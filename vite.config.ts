@@ -17,6 +17,20 @@ export default defineConfig({
       // when to take it, instead of an invisible mechanism whose timing
       // depends on exactly when the browser happens to re-check the SW.
       registerType: 'prompt',
+      // injectManifest, not generateSW — needed so the service worker
+      // can carry its own push/notificationclick handlers (see src/sw.ts)
+      // for background notifications. The navigateFallbackDenylist
+      // behavior that used to live in the workbox option below now lives
+      // directly in sw.ts instead, since generateSW's config surface
+      // doesn't apply once there's a custom worker source.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        // Matches generateSW's default precache globbing — keeps the
+        // same set of build assets precached as before the switch.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+      },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Lucky You',
@@ -50,12 +64,6 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
-      },
-      workbox: {
-        // Never cache API calls or auth/money flows — the app must always
-        // hit the server for anything involving balances or draw state.
-        navigateFallbackDenylist: [/^\/api/],
-        runtimeCaching: [],
       },
     }),
   ],

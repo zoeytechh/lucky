@@ -3,11 +3,13 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ErrorAlert from '../components/ErrorAlert'
 import { useAuth } from '../lib/AuthContext'
+import { usePushNotifications } from '../lib/usePushNotifications'
 
 export default function Profile() {
   const { user, uploadAvatar, updateProfile, logout } = useAuth()
   const navigate = useNavigate()
   const fileInput = useRef<HTMLInputElement>(null)
+  const push = usePushNotifications()
 
   const [fullName, setFullName] = useState(user?.fullName ?? '')
   const [preview, setPreview] = useState<string | null>(null)
@@ -113,6 +115,33 @@ export default function Profile() {
           {savingName ? 'SAVING…' : saved ? 'SAVED' : 'SAVE'}
         </button>
       </form>
+
+      {push.supported && (
+        <div className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-hairline bg-ground-raised px-4 py-3">
+          <div>
+            <span className="block text-sm text-ink">Push notifications</span>
+            <span className="block text-xs text-ink-muted">
+              {push.permission === 'denied'
+                ? 'Blocked in your browser settings'
+                : push.subscribed
+                  ? 'A winner is picked or a round is almost full'
+                  : 'Get notified even when the app is closed'}
+            </span>
+          </div>
+          {push.permission !== 'denied' && (
+            <button
+              type="button"
+              onClick={() => (push.subscribed ? push.disable() : push.enable())}
+              disabled={push.loading}
+              className={`shrink-0 rounded-full px-4 py-2 font-display text-xs disabled:opacity-60 ${
+                push.subscribed ? 'bg-ground-raised-2 text-ink' : 'bg-primary text-primary-ink'
+              }`}
+            >
+              {push.loading ? '…' : push.subscribed ? 'ON' : 'ENABLE'}
+            </button>
+          )}
+        </div>
+      )}
 
       <button
         type="button"
