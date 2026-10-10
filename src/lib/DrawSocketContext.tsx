@@ -85,6 +85,11 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
   // closes, for anyone not already looking at the ring fill up live.
   const [almostFull, setAlmostFull] = useState<RoundProgress | null>(null)
   const almostFullNotifiedRoundIds = useRef(new Set<string>())
+  // Same tri-state pattern as isYouWin below: someone already in this
+  // round doesn't need "join now" — they need "it's about to start"
+  // instead. null = not yet determined, so neither copy renders until
+  // this resolves.
+  const [isAlmostFullEntrant, setIsAlmostFullEntrant] = useState<boolean | null>(null)
 
   const enqueueSettlement = useCallback((s: RoundSettled) => {
     if (queuedRoundIds.current.has(s.roundId)) return
@@ -260,6 +265,29 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
     }
   }, [announcement])
 
+  // Same check as isYouWin above, for the almost-full nudge instead of
+  // the winner announcement — is the viewer already an entrant of the
+  // round that just crossed the threshold.
+  useEffect(() => {
+    if (!almostFull) {
+      setIsAlmostFullEntrant(null)
+      return
+    }
+    setIsAlmostFullEntrant(null)
+    let cancelled = false
+    apiFetch('/api/draw/entries?limit=5')
+      .then(({ entries }: { entries: { roundId: string }[] }) => {
+        if (cancelled) return
+        setIsAlmostFullEntrant(entries.some((e) => e.roundId === almostFull.roundId))
+      })
+      .catch(() => {
+        if (!cancelled) setIsAlmostFullEntrant(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [almostFull])
+
   return (
     <DrawSocketContext.Provider value={{ progress, pendingSettlement, revealWinnerSlot, enqueueSettlement }}>
       {children}
@@ -289,11 +317,12 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
       </AnimatePresence>
 
       <AnimatePresence>
-        {almostFull && !onDrawPage && (
+        {almostFull && !onDrawPage && isAlmostFullEntrant !== null && (
           <AlmostFullToast
             roundNumber={almostFull.roundNumber}
             entryCount={almostFull.entryCount}
             capacity={almostFull.capacity}
+            youAreIn={isAlmostFullEntrant}
             onClose={() => setAlmostFull(null)}
           />
         )}

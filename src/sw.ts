@@ -34,23 +34,43 @@ self.addEventListener('message', (event) => {
 
 type PushPayload = { title: string; body: string; url?: string }
 
+const SUPPRESSED_TAG = 'lucky-you-in-app'
+
 self.addEventListener('push', (event) => {
   let payload: PushPayload = { title: 'Lucky You', body: '' }
   try {
     if (event.data) payload = { ...payload, ...event.data.json() }
   } catch {
     // A push with no JSON body (or malformed) still shows something
-    // rather than silently doing nothing — Chrome requires showing a
-    // notification for every push event it delivers, on pain of
-    // eventually revoking the permission for "silent" pushes.
+    // rather than silently doing nothing.
   }
   event.waitUntil(
-    self.registration.showNotification(payload.title, {
-      body: payload.body,
-      icon: '/pwa-192x192.png',
-      badge: '/pwa-192x192.png',
-      data: { url: payload.url ?? '/' },
-    }),
+    (async () => {
+      // If the app is already open and visible right now, that same
+      // live page is already showing this via its own in-app toast (see
+      // DrawSocketContext) — a system popup on top would just be a
+      // redundant interruption, which the user explicitly asked not to
+      // get. Chrome still requires actually calling showNotification()
+      // for every push, though, on pain of eventually revoking the
+      // permission for ones that go "silent" — so this shows it and
+      // closes it again immediately after, rather than skipping the
+      // call outright: spec-compliant, and over before anyone notices.
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      const appVisible = clients.some((c) => (c as WindowClient).visibilityState === 'visible')
+
+      await self.registration.showNotification(payload.title, {
+        body: payload.body,
+        icon: '/pwa-192x192.png',
+        badge: '/pwa-192x192.png',
+        data: { url: payload.url ?? '/' },
+        tag: appVisible ? SUPPRESSED_TAG : undefined,
+      })
+
+      if (appVisible) {
+        const shown = await self.registration.getNotifications({ tag: SUPPRESSED_TAG })
+        for (const n of shown) n.close()
+      }
+    })(),
   )
 })
 

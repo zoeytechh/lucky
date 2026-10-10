@@ -7,6 +7,11 @@ type Props = {
   roundNumber: number
   entryCount: number
   capacity: number
+  // Whether the viewer is already an entrant in this round. They don't
+  // need a "come join" pitch — they're in — so they get told it's about
+  // to start instead, matching the push notification's own split wording
+  // (see draw.service.ts's almost-full block).
+  youAreIn: boolean
   onClose: () => void
 }
 
@@ -20,7 +25,7 @@ const AUTO_DISMISS_MS = 6000
  * (see DrawSocketContext) — the ring there already shows the same thing
  * live, so a toast on top of it would just be noise.
  */
-export default function AlmostFullToast({ roundNumber, entryCount, capacity, onClose }: Props) {
+export default function AlmostFullToast({ roundNumber, entryCount, capacity, youAreIn, onClose }: Props) {
   useEffect(() => {
     const timer = setTimeout(onClose, AUTO_DISMISS_MS)
     return () => clearTimeout(timer)
@@ -37,11 +42,23 @@ export default function AlmostFullToast({ roundNumber, entryCount, capacity, onC
         <ClockIcon size={18} />
       </span>
       <Link to="/" onClick={onClose} className="flex-1 text-xs leading-snug text-ink">
-        Round {roundNumber} is almost full —{' '}
-        <span className="font-bold text-secondary">
-          {entryCount} of {capacity}
-        </span>
-        . Join now!
+        {youAreIn ? (
+          <>
+            Round {roundNumber} is filling up —{' '}
+            <span className="font-bold text-secondary">
+              {entryCount} of {capacity}
+            </span>
+            . The draw starts soon.
+          </>
+        ) : (
+          <>
+            Round {roundNumber} is almost full —{' '}
+            <span className="font-bold text-secondary">
+              {entryCount} of {capacity}
+            </span>
+            . Join now!
+          </>
+        )}
       </Link>
       <button
         type="button"
