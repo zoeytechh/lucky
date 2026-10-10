@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useLocation } from 'react-router-dom'
 import WinnerModal from '../components/WinnerModal'
 import WinnerToast from '../components/WinnerToast'
 import { apiFetch } from './api'
@@ -52,6 +53,12 @@ const CATCH_UP_RECENCY_MS = 3 * 60 * 1000
 export function DrawSocketProvider({ children }: { children: ReactNode }) {
   const { progress, settled } = useDrawSocket()
   const { refresh: refreshWallet } = useWallet()
+  // The Draw page already shows the ring/suspense build-up, so everyone
+  // watching it gets the full celebratory modal when it resolves —
+  // winner or not. Only away from Draw does the split kick in: winner
+  // still gets the full modal (it's about them, wherever they are),
+  // everyone else gets the lighter toast instead of a full interrupt.
+  const onDrawPage = useLocation().pathname === '/'
 
   // Ring-driving state — same shape/behavior as Draw.tsx used to own
   // directly, just lifted up so it isn't destroyed by a route change.
@@ -221,20 +228,20 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
       {children}
 
       <AnimatePresence>
-        {announcement && isYouWin === true && (
+        {announcement && (onDrawPage || isYouWin === true) && (
           <WinnerModal
             displayName={announcement.winnerDisplayName}
             avatarUrl={announcement.winnerAvatarUrl}
             slotNumber={announcement.winnerSlotNumber}
             payoutMinor={announcement.winnerPayoutMinor}
-            isYou
+            isYou={isYouWin === true}
             onClose={() => setAnnouncement(null)}
           />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
-        {announcement && isYouWin === false && (
+        {announcement && !onDrawPage && isYouWin === false && (
           <WinnerToast
             displayName={announcement.winnerDisplayName}
             avatarUrl={announcement.winnerAvatarUrl}
