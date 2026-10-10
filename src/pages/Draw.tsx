@@ -102,6 +102,20 @@ export default function Draw() {
   // confirm-entry dialog JSX below; handleEnter only ever runs once this
   // has been answered "yes".
   const [confirmingEntry, setConfirmingEntry] = useState(false)
+  // The dialog's own buttons ignore taps for a brief moment after it
+  // opens — on a touch device, if the dialog renders exactly under a
+  // finger still touching the screen from the tap that opened it, the
+  // release can land on "Yes, Enter" underneath and fire immediately,
+  // skipping the confirmation entirely. This closes that gap.
+  const [dialogArmed, setDialogArmed] = useState(false)
+  useEffect(() => {
+    if (!confirmingEntry) {
+      setDialogArmed(false)
+      return
+    }
+    const timer = setTimeout(() => setDialogArmed(true), 350)
+    return () => clearTimeout(timer)
+  }, [confirmingEntry])
   const [revealWinnerSlot, setRevealWinnerSlot] = useState<number | null>(null)
   // Fed by either the live socket broadcast or, directly, by this user's
   // own POST /api/draw/entries response when it's the one that settles
@@ -367,7 +381,7 @@ export default function Draw() {
               <p className="font-display text-lg uppercase text-ink">Enter this draw?</p>
               <p className="mt-2 text-sm text-ink-muted">
                 You'll be charged {formatNaira(round.entryCostMinor)} — {formatNaira(round.stakeMinor)}{' '}
-                entry fee + {formatNaira(round.feeMinor)} app fee.
+                entry charge + {formatNaira(round.feeMinor)} app charge.
               </p>
               <div className="mt-5 flex gap-3">
                 <button
@@ -379,11 +393,13 @@ export default function Draw() {
                 </button>
                 <button
                   type="button"
+                  disabled={!dialogArmed}
                   onClick={() => {
+                    if (!dialogArmed) return
                     setConfirmingEntry(false)
                     handleEnter()
                   }}
-                  className="flex-1 rounded-full bg-primary py-2.5 font-display text-sm text-primary-ink"
+                  className="flex-1 rounded-full bg-primary py-2.5 font-display text-sm text-primary-ink disabled:opacity-60"
                 >
                   YES, ENTER
                 </button>
@@ -449,7 +465,7 @@ export default function Draw() {
           </p>
         ) : (
           <p className="mt-2 text-xs text-ink-muted">
-            {formatNaira(round.stakeMinor)} entry fee + {formatNaira(round.feeMinor)} app fee
+            {formatNaira(round.stakeMinor)} entry charge + {formatNaira(round.feeMinor)} app charge
           </p>
         )}
 
