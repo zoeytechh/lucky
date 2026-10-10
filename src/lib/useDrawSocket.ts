@@ -15,6 +15,7 @@ export type RoundSettled = {
   winnerSlotNumber: number
   winnerDisplayName: string
   winnerAvatarUrl: string | null
+  winnerPayoutMinor: string
   // When the winner number actually appears — decided once server-side
   // (see REVEAL_MIN_MS/REVEAL_MAX_MS in lucky-api), so every viewer
   // counts down to the same instant instead of each client randomizing

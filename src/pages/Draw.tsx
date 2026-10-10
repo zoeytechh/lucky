@@ -6,9 +6,8 @@ import DrawRoll from '../components/DrawRoll'
 import ErrorAlert from '../components/ErrorAlert'
 import { CheckCircleIcon, ChevronRightIcon, QuestionIcon, TrophyIcon } from '../components/icons'
 import Loader from '../components/Loader'
-import WinnerModal from '../components/WinnerModal'
 import { ApiError, apiFetch } from '../lib/api'
-import { type RoundSettled, useDrawSocket } from '../lib/useDrawSocket'
+import { useDrawSocketContext } from '../lib/DrawSocketContext'
 import { formatRoundDate } from '../lib/date'
 import { formatNaira } from '../lib/money'
 import { useWallet } from '../lib/WalletContext'
@@ -27,20 +26,6 @@ type Round = {
   // schema comment on DrawRound.entriesOpenAt in lucky-api). Backend-
   // enforced, not just a frontend gate.
   entriesOpenAt: string | null
-}
-
-// What /api/draw/current returns for the round that just settled, when
-// the open round isn't accepting entries yet — everything needed to
-// show a late-joining viewer the exact same suspense/reveal an already-
-// connected one sees, instead of a blank "next" round they'd otherwise
-// land on mid-reveal.
-type DrawingInfo = {
-  roundId: string
-  roundNumber: number
-  winnerSlotNumber: number
-  winnerDisplayName: string
-  winnerAvatarUrl: string | null
-  revealAt: string
 }
 
 type MyEntry = {
@@ -68,6 +53,7 @@ type PlaceEntryResponse = {
   winnerSlotNumber?: number
   winnerDisplayName?: string
   winnerAvatarUrl?: string | null
+  winnerPayoutMinor?: string
   revealAt?: string
   nextRoundId?: string
   nextRoundNumber?: number
@@ -89,7 +75,6 @@ const outcomeClass: Record<RecentEntry['outcome'], string> = {
 
 export default function Draw() {
   const { refresh: refreshWallet } = useWallet()
-  const { progress, settled } = useDrawSocket()
   const [round, setRound] = useState<Round | null>(null)
   const [myEntries, setMyEntries] = useState<MyEntry[]>([])
   const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([])
@@ -116,40 +101,12 @@ export default function Draw() {
     const timer = setTimeout(() => setDialogArmed(true), 350)
     return () => clearTimeout(timer)
   }, [confirmingEntry])
-  const [revealWinnerSlot, setRevealWinnerSlot] = useState<number | null>(null)
-  // Fed by either the live socket broadcast or, directly, by this user's
-  // own POST /api/draw/entries response when it's the one that settles
-  // the round — the broadcast alone isn't reliable for that entrant: it
-  // can race their page's own socket handshake if they only just
-  // connected, which is exactly what left them seeing no reveal at all.
-  //
-  // A queue, not a single overwritable slot — with ROUND_SIZE small
-  // enough for rounds to settle in rapid succession (manual testing),
-  // round B could settle while round A's reveal was still mid-suspense;
-  // naively overwriting a single pendingSettlement would cancel A's
-  // reveal timer outright, leaving that viewer stuck watching numbers
-  // roll forever for a round that already finished — and since load()/
-  // refreshWallet() only ever run once a reveal actually completes, the
-  // same bug also showed up as "my balance/recent entries didn't
-  // update". Each queued settlement now gets its own full suspense+
-  // reveal cycle, processed one at a time, none dropped.
-  const [settlementQueue, setSettlementQueue] = useState<RoundSettled[]>([])
-  const [pendingSettlement, setPendingSettlement] = useState<RoundSettled | null>(null)
-  const queuedRoundIds = useRef(new Set<string>())
-
-  // A snapshot of whichever settlement last revealed, kept around purely
-  // to feed WinnerModal — deliberately separate from pendingSettlement,
-  // which the queue-draining effect clears 4s after reveal to pick up the
-  // next queued round. The modal has its own lifetime (dismissed by the
-  // viewer, or auto-dismissed after a longer hold) that shouldn't be tied
-  // to the queue's own pacing.
-  const [winnerModalData, setWinnerModalData] = useState<RoundSettled | null>(null)
-
-  const enqueueSettlement = useCallback((s: RoundSettled) => {
-    if (queuedRoundIds.current.has(s.roundId)) return
-    queuedRoundIds.current.add(s.roundId)
-    setSettlementQueue((q) => [...q, s])
-  }, [])
+  // The suspense/reveal sequence itself — and the winner announcement it
+  // feeds — now lives in DrawSocketContext, mounted once in App.tsx above
+  // the routed Outlet, specifically so it survives navigating away from
+  // this page and still fires wherever the viewer actually is. This page
+  // just reads the ring-driving pieces it needs from there.
+  const { progress, pendingSettlement, revealWinnerSlot, enqueueSettlement } = useDrawSocketContext()
 
   const load = useCallback(async () => {
     const [roundRes, myEntriesRes, recentRes] = await Promise.all([
@@ -160,29 +117,7 @@ export default function Draw() {
     setRound(roundRes)
     setMyEntries(myEntriesRes.entries)
     setRecentEntries(recentRes.entries)
-
-    // This round isn't accepting entries yet — the previous one (sent
-    // back as `drawing`) is still being revealed to whoever was already
-    // watching it. Join that same reveal instead of landing on what
-    // would otherwise look like a blank, freshly-opened round with no
-    // explanation. Routed through the same queue/dedupe as the live
-    // socket path, so if both somehow arrive for the same round, only
-    // one reveal plays.
-    const drawing: DrawingInfo | null = roundRes.drawing
-    if (drawing) {
-      enqueueSettlement({
-        roundId: drawing.roundId,
-        roundNumber: drawing.roundNumber,
-        winnerSlotNumber: drawing.winnerSlotNumber,
-        winnerDisplayName: drawing.winnerDisplayName,
-        winnerAvatarUrl: drawing.winnerAvatarUrl,
-        revealAt: drawing.revealAt,
-        nextRoundId: roundRes.roundId,
-        nextRoundNumber: roundRes.roundNumber,
-        nextEntriesOpenAt: roundRes.entriesOpenAt,
-      })
-    }
-  }, [enqueueSettlement])
+  }, [])
 
   useEffect(() => {
     load().finally(() => setLoading(false))
@@ -206,59 +141,17 @@ export default function Draw() {
     })
   }, [progress])
 
-  // The socket broadcast is one of two ways a settlement gets enqueued —
-  // see handleEnter below for the other (this same user's own entry
-  // settling the round). Both funnel through enqueueSettlement, whose
-  // queuedRoundIds dedupes if both arrive for the same round.
+  // Re-fetches this page's own round/entries state once a reveal this
+  // page was watching concludes (pendingSettlement going from set to
+  // null) — the shared context no longer does this itself since it has
+  // no reason to know about this page's own display data; it only
+  // refreshes the wallet (see DrawSocketContext), which matters
+  // regardless of the current page.
+  const prevPendingSettlementRef = useRef(pendingSettlement)
   useEffect(() => {
-    if (settled) enqueueSettlement(settled)
-  }, [settled, enqueueSettlement])
-
-  // Pulls the next queued settlement once nothing is currently being
-  // revealed — this is what makes each one get its own full cycle
-  // instead of a later one stomping an earlier one still in progress.
-  useEffect(() => {
-    if (pendingSettlement || settlementQueue.length === 0) return
-    setPendingSettlement(settlementQueue[0])
-    setSettlementQueue((q) => q.slice(1))
-  }, [settlementQueue, pendingSettlement])
-
-  // Live settlement reveal — fires for every connected viewer the instant
-  // the round fills, not just whoever placed the final entry. Counts
-  // down to `revealAt`, a single instant decided once server-side (not
-  // independently randomized per client as this used to work) — that's
-  // what lets a late-joining viewer (via load()'s `drawing` catch-up
-  // above) count down to the exact same moment as someone who's been
-  // watching since the round filled, instead of each client guessing
-  // its own window.
-  useEffect(() => {
-    if (!pendingSettlement) return
-    const delayMs = Math.max(0, new Date(pendingSettlement.revealAt).getTime() - Date.now())
-    const revealTimer = setTimeout(() => {
-      setRevealWinnerSlot(pendingSettlement.winnerSlotNumber)
-      setWinnerModalData(pendingSettlement)
-    }, delayMs)
-    return () => clearTimeout(revealTimer)
-  }, [pendingSettlement])
-
-  // Once the winner number is actually shown, hold it on screen until
-  // nextEntriesOpenAt — the same server-decided instant that's also the
-  // actual backend-enforced gate on the next round's entries (a POST
-  // before this passes is refused), not just a client-side convention.
-  // Clearing pendingSettlement here (not just revealWinnerSlot) is what
-  // lets the queue-draining effect above pick up the next round, if one
-  // settled while this reveal was showing.
-  useEffect(() => {
-    if (revealWinnerSlot === null || !pendingSettlement) return
-    const holdMs = Math.max(0, new Date(pendingSettlement.nextEntriesOpenAt).getTime() - Date.now())
-    const clearTimer = setTimeout(() => {
-      setRevealWinnerSlot(null)
-      setPendingSettlement(null)
-      load()
-      refreshWallet()
-    }, holdMs)
-    return () => clearTimeout(clearTimer)
-  }, [revealWinnerSlot, pendingSettlement, load, refreshWallet])
+    if (prevPendingSettlementRef.current && !pendingSettlement) load()
+    prevPendingSettlementRef.current = pendingSettlement
+  }, [pendingSettlement, load])
 
   async function handleEnter() {
     setError(null)
@@ -303,6 +196,7 @@ export default function Draw() {
           winnerSlotNumber: result.winnerSlotNumber!,
           winnerDisplayName: result.winnerDisplayName!,
           winnerAvatarUrl: result.winnerAvatarUrl ?? null,
+          winnerPayoutMinor: result.winnerPayoutMinor!,
           revealAt: result.revealAt!,
           nextRoundId: result.nextRoundId!,
           nextRoundNumber: result.nextRoundNumber!,
@@ -327,11 +221,6 @@ export default function Draw() {
   }
 
   const myCurrentEntry = myEntries.find((e) => e.roundId === round.roundId)
-  const myWin = winnerModalData
-    ? myEntries.find(
-        (e) => e.roundId === winnerModalData.roundId && e.slotNumber === winnerModalData.winnerSlotNumber,
-      )
-    : undefined
 
   // True for the whole suspense-through-hold window, whether this viewer
   // has been watching since the round filled (pendingSettlement comes
@@ -345,19 +234,6 @@ export default function Draw() {
 
   return (
     <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
-      <AnimatePresence>
-        {winnerModalData && (
-          <WinnerModal
-            displayName={winnerModalData.winnerDisplayName}
-            avatarUrl={winnerModalData.winnerAvatarUrl}
-            slotNumber={winnerModalData.winnerSlotNumber}
-            payoutMinor={round.winnerPayoutMinor}
-            isYou={!!myWin}
-            onClose={() => setWinnerModalData(null)}
-          />
-        )}
-      </AnimatePresence>
-
       <AnimatePresence>
         {confirmingEntry && (
           <motion.div
