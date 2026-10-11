@@ -97,11 +97,12 @@ function CommentRow({
         </p>
       )}
       <div className="flex items-baseline justify-between gap-3">
-        {/* Own name in white (text-ink), everyone else's in the usual
-            secondary coral — the quick "is this mine?" cue that the
-            earlier left/right bubble layout used to carry, kept now that
+        {/* Own name matches the "Comments" header's own color
+            (text-ink-muted), everyone else's stays the usual secondary
+            coral — the quick "is this mine?" cue that the earlier
+            left/right bubble layout used to carry, kept now that
             threading replaced that layout. */}
-        <span className={`text-xs font-medium ${isMine ? 'text-ink' : 'text-secondary'}`}>
+        <span className={`text-xs font-medium ${isMine ? 'text-ink-muted' : 'text-secondary'}`}>
           {comment.user.displayName}
         </span>
         <span className="shrink-0 text-[10px] text-ink-muted">{timeAgo(comment.createdAt)}</span>
