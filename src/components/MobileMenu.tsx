@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '../lib/AuthContext'
 
 const links = [
   { to: '/', label: 'Draw', end: true },
@@ -16,6 +17,9 @@ export default function MobileMenu({
   open: boolean
   onClose: () => void
 }) {
+  const { user } = useAuth()
+  const items = user?.role === 'ADMIN' ? [...links, { to: '/admin', label: 'Admin', end: false }] : links
+
   return (
     <AnimatePresence>
       {open && (
@@ -40,7 +44,7 @@ export default function MobileMenu({
             <span className="mb-6 font-display text-lg tracking-wide text-primary">
               LUCKY YOU
             </span>
-            {links.map((link) => (
+            {items.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}

@@ -6,6 +6,7 @@ import UpdatePrompt from './components/UpdatePrompt'
 import './index.css'
 import { AuthProvider } from './lib/AuthContext'
 import { WalletProvider } from './lib/WalletContext'
+import Admin from './pages/Admin'
 import Draw from './pages/Draw'
 import HowToPlay from './pages/HowToPlay'
 import Leaderboard from './pages/Leaderboard'
@@ -30,6 +31,7 @@ const router = createBrowserRouter([
       { path: 'wallet', element: <Wallet /> },
       { path: 'leaderboard', element: <Leaderboard /> },
       { path: 'profile', element: <Profile /> },
+      { path: 'admin', element: <Admin /> },
     ],
   },
 ])

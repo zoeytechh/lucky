@@ -79,6 +79,11 @@ function App() {
               <NavLink to="/how-to-play" className={navLinkClass}>
                 How to Play
               </NavLink>
+              {user?.role === 'ADMIN' && (
+                <NavLink to="/admin" className={navLinkClass}>
+                  Admin
+                </NavLink>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3">
