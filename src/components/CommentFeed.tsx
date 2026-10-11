@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ApiError, apiFetch } from '../lib/api'
+import { useAuth } from '../lib/AuthContext'
 import { useCommentSocketContext } from '../lib/CommentSocketContext'
 import type { Comment } from '../lib/useCommentSocket'
 import ErrorAlert from './ErrorAlert'
@@ -80,10 +81,12 @@ function buildThreads(comments: Comment[]): Thread[] {
 function CommentRow({
   comment,
   rootId,
+  isMine,
   onReply,
 }: {
   comment: Comment
   rootId: string
+  isMine: boolean
   onReply: (c: Comment) => void
 }) {
   return (
@@ -94,7 +97,13 @@ function CommentRow({
         </p>
       )}
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-xs font-medium text-secondary">{comment.user.displayName}</span>
+        {/* Own name in white (text-ink), everyone else's in the usual
+            secondary coral — the quick "is this mine?" cue that the
+            earlier left/right bubble layout used to carry, kept now that
+            threading replaced that layout. */}
+        <span className={`text-xs font-medium ${isMine ? 'text-ink' : 'text-secondary'}`}>
+          {comment.user.displayName}
+        </span>
         <span className="shrink-0 text-[10px] text-ink-muted">{timeAgo(comment.createdAt)}</span>
       </div>
       <p className="mt-0.5 break-words text-sm text-ink">{comment.body}</p>
@@ -119,6 +128,7 @@ function CommentRow({
  * every new comment, including the poster's own.
  */
 export default function CommentFeed() {
+  const { user } = useAuth()
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
   const [draft, setDraft] = useState('')
@@ -208,7 +218,12 @@ export default function CommentFeed() {
                 exit={{ opacity: 0, scale: 0.97 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               >
-                <CommentRow comment={root} rootId={root.id} onReply={handleReplyClick} />
+                <CommentRow
+                  comment={root}
+                  rootId={root.id}
+                  isMine={root.user.id === user?.id}
+                  onReply={handleReplyClick}
+                />
                 {replies.length > 0 && (
                   <div className="ml-4 mt-2 flex flex-col gap-2 border-l-2 border-hairline pl-3">
                     {replies.map((reply) => (
@@ -216,6 +231,7 @@ export default function CommentFeed() {
                         key={reply.id}
                         comment={reply}
                         rootId={root.id}
+                        isMine={reply.user.id === user?.id}
                         onReply={handleReplyClick}
                       />
                     ))}
