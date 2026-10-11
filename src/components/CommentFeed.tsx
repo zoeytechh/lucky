@@ -1,7 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ApiError, apiFetch } from '../lib/api'
-import { useAuth } from '../lib/AuthContext'
 import { useCommentSocketContext } from '../lib/CommentSocketContext'
 import type { Comment } from '../lib/useCommentSocket'
 import ErrorAlert from './ErrorAlert'
@@ -26,16 +25,100 @@ function timeAgo(iso: string): string {
 }
 
 /**
- * Newest-first, capped at MAX_VISIBLE — a fixed-height scroll container
- * (not an ever-growing page) since this is meant to always show "the
- * most recent 100", not accumulate indefinitely. Backfilled once via
- * REST on mount, then kept live over the authenticated /comments socket
- * namespace (see useCommentSocket) — one source of truth for every new
- * comment, including the poster's own (no optimistic local insert, so
- * there's nothing to reconcile/dedupe against the broadcast).
+ * Every reply only carries its own direct parent (see useCommentSocket's
+ * Comment type) — a reply-to-a-reply doesn't know its thread's original
+ * top-level comment on its own. Walks the chain through whatever's
+ * currently loaded to find it, so a reply three deep still nests under
+ * the same root as a direct reply would (Facebook-style flattened
+ * threading, not infinite indent). Falls back to the nearest known
+ * ancestor if the chain runs past what's loaded (expired, or outside
+ * MAX_VISIBLE) rather than losing the comment entirely.
+ */
+function findThreadRoot(comment: Comment, byId: Map<string, Comment>): string {
+  let current = comment
+  const seen = new Set<string>()
+  while (current.replyTo && !seen.has(current.id)) {
+    seen.add(current.id)
+    const parent = byId.get(current.replyTo.id)
+    if (!parent) return current.replyTo.id
+    current = parent
+  }
+  return current.id
+}
+
+type Thread = { root: Comment; replies: Comment[] }
+
+function buildThreads(comments: Comment[]): Thread[] {
+  const byId = new Map(comments.map((c) => [c.id, c]))
+  const repliesByRoot = new Map<string, Comment[]>()
+  const topLevel: Comment[] = []
+
+  for (const c of comments) {
+    if (!c.replyTo) {
+      topLevel.push(c)
+      continue
+    }
+    const rootId = findThreadRoot(c, byId)
+    const root = byId.get(rootId)
+    if (!root) {
+      // The root itself isn't loaded (expired/scrolled out) — show this
+      // reply as its own top-level entry rather than dropping it.
+      topLevel.push(c)
+      continue
+    }
+    if (!repliesByRoot.has(rootId)) repliesByRoot.set(rootId, [])
+    repliesByRoot.get(rootId)!.push(c)
+  }
+
+  return topLevel.map((root) => ({
+    root,
+    // comments[] is newest-first; a thread reads naturally oldest-first.
+    replies: (repliesByRoot.get(root.id) ?? []).slice().reverse(),
+  }))
+}
+
+function CommentRow({
+  comment,
+  rootId,
+  onReply,
+}: {
+  comment: Comment
+  rootId: string
+  onReply: (c: Comment) => void
+}) {
+  return (
+    <div className="rounded-lg bg-ground-raised-2 px-3 py-2">
+      {comment.replyTo && comment.replyTo.id !== rootId && (
+        <p className="mb-1 truncate text-[10px] text-ink-muted">
+          ↳ Replying to <span className="font-medium">{comment.replyTo.user.displayName}</span>
+        </p>
+      )}
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-xs font-medium text-secondary">{comment.user.displayName}</span>
+        <span className="shrink-0 text-[10px] text-ink-muted">{timeAgo(comment.createdAt)}</span>
+      </div>
+      <p className="mt-0.5 break-words text-sm text-ink">{comment.body}</p>
+      <button
+        type="button"
+        onClick={() => onReply(comment)}
+        className="mt-1 block text-[10px] font-medium text-ink-muted hover:text-secondary"
+      >
+        Reply
+      </button>
+    </div>
+  )
+}
+
+/**
+ * Facebook-style threading: top-level comments newest-first (as before),
+ * each with its own replies — direct or nested deeper — grouped and
+ * indented beneath it, connected by a vertical line, oldest-first within
+ * the thread (natural reading order for a conversation). Backfilled once
+ * via REST on mount, then kept live over the authenticated /comments
+ * socket namespace (see useCommentSocket) — one source of truth for
+ * every new comment, including the poster's own.
  */
 export default function CommentFeed() {
-  const { user } = useAuth()
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
   const [draft, setDraft] = useState('')
@@ -74,6 +157,8 @@ export default function CommentFeed() {
     return () => clearInterval(interval)
   }, [])
 
+  const threads = useMemo(() => buildThreads(comments), [comments])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const body = draft.trim()
@@ -104,59 +189,40 @@ export default function CommentFeed() {
 
       <div
         ref={listRef}
-        className="mt-3 flex h-[320px] flex-col gap-2 overflow-y-auto rounded-xl bg-ground-raised p-3"
+        className="mt-3 flex h-[320px] flex-col gap-3 overflow-y-auto rounded-xl bg-ground-raised p-3"
       >
         {loading ? (
           <p className="py-6 text-center text-xs text-ink-muted">Loading…</p>
-        ) : comments.length === 0 ? (
+        ) : threads.length === 0 ? (
           <p className="py-6 text-center text-xs text-ink-muted">
             No comments yet. Be the first to share your experience.
           </p>
         ) : (
           <AnimatePresence initial={false}>
-            {comments.map((c) => {
-              const isMine = c.user.id === user?.id
-              return (
-                <motion.div
-                  key={c.id}
-                  layout
-                  initial={{ opacity: 0, y: -10, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.97 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-lg px-3 py-2 ${
-                      isMine ? 'bg-primary/20' : 'bg-ground-raised-2'
-                    }`}
-                  >
-                    {c.replyTo && (
-                      <p className="mb-1 truncate text-[10px] text-ink-muted">
-                        Replying to <span className="font-medium">{c.replyTo.user.displayName}</span>:{' '}
-                        {c.replyTo.body}
-                      </p>
-                    )}
-                    <div className="flex items-baseline justify-between gap-3">
-                      {!isMine && (
-                        <span className="text-xs font-medium text-secondary">{c.user.displayName}</span>
-                      )}
-                      <span className="ml-auto shrink-0 text-[10px] text-ink-muted">
-                        {timeAgo(c.createdAt)}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 break-words text-sm text-ink">{c.body}</p>
-                    <button
-                      type="button"
-                      onClick={() => handleReplyClick(c)}
-                      className="mt-1 block text-[10px] font-medium text-ink-muted hover:text-secondary"
-                    >
-                      Reply
-                    </button>
+            {threads.map(({ root, replies }) => (
+              <motion.div
+                key={root.id}
+                layout
+                initial={{ opacity: 0, y: -10, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              >
+                <CommentRow comment={root} rootId={root.id} onReply={handleReplyClick} />
+                {replies.length > 0 && (
+                  <div className="ml-4 mt-2 flex flex-col gap-2 border-l-2 border-hairline pl-3">
+                    {replies.map((reply) => (
+                      <CommentRow
+                        key={reply.id}
+                        comment={reply}
+                        rootId={root.id}
+                        onReply={handleReplyClick}
+                      />
+                    ))}
                   </div>
-                </motion.div>
-              )
-            })}
+                )}
+              </motion.div>
+            ))}
           </AnimatePresence>
         )}
       </div>
