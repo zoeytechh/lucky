@@ -74,7 +74,7 @@ const outcomeClass: Record<RecentEntry['outcome'], string> = {
 }
 
 export default function Draw() {
-  const { refresh: refreshWallet } = useWallet()
+  const { balanceMinor, refresh: refreshWallet } = useWallet()
   const [round, setRound] = useState<Round | null>(null)
   const [myEntries, setMyEntries] = useState<MyEntry[]>([])
   const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([])
@@ -251,6 +251,14 @@ export default function Draw() {
   const drawInProgress =
     !!pendingSettlement || (round.entriesOpenAt ? new Date(round.entriesOpenAt) > new Date() : false)
 
+  // A UI nicety on top of the real guarantee, not a replacement for it —
+  // placeEntry() checks this same comparison server-side, before the
+  // round lock is even touched (draw.service.ts), and rejects with 402
+  // INSUFFICIENT_BALANCE regardless of what this button shows. This just
+  // saves a doomed round-trip: no point letting someone tap Enter, wait,
+  // and get told no when the wallet balance already says so.
+  const insufficientBalance = balanceMinor !== null && BigInt(balanceMinor) < BigInt(round.entryCostMinor)
+
   return (
     <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
       <AnimatePresence>
@@ -340,7 +348,7 @@ export default function Draw() {
         <motion.button
           type="button"
           onClick={() => setConfirmingEntry(true)}
-          disabled={entering || !!myCurrentEntry || drawInProgress}
+          disabled={entering || !!myCurrentEntry || drawInProgress || insufficientBalance}
           whileTap={{ scale: 0.95 }}
           className="mt-6 rounded-full bg-primary px-8 py-3 font-display text-base text-primary-ink shadow-[0_8px_22px_-8px_rgba(255,138,126,0.55)] disabled:opacity-60"
         >
@@ -348,9 +356,11 @@ export default function Draw() {
             ? `YOU'RE IN AT SLOT ${myCurrentEntry.slotNumber}`
             : drawInProgress
               ? 'DRAW IN PROGRESS…'
-              : entering
-                ? 'ENTERING…'
-                : `ENTER ${formatNaira(round.entryCostMinor)}`}
+              : insufficientBalance
+                ? 'INSUFFICIENT BALANCE'
+                : entering
+                  ? 'ENTERING…'
+                  : `ENTER ${formatNaira(round.entryCostMinor)}`}
         </motion.button>
         {myCurrentEntry ? (
           <p className="mt-2 text-xs text-ink-muted">
@@ -361,6 +371,14 @@ export default function Draw() {
         ) : drawInProgress ? (
           <p className="mt-2 text-xs text-ink-muted">
             A winner is being picked — you can enter the next round once this one's done.
+          </p>
+        ) : insufficientBalance ? (
+          <p className="mt-2 text-xs text-ink-muted">
+            You need {formatNaira(round.entryCostMinor)} to enter —{' '}
+            <Link to="/wallet" className="text-secondary underline">
+              top up your wallet
+            </Link>
+            .
           </p>
         ) : (
           <p className="mt-2 text-xs text-ink-muted">
