@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { ApiError, apiFetch } from '../lib/api'
-import { type Comment, useCommentSocket } from '../lib/useCommentSocket'
+import { useCommentSocketContext } from '../lib/CommentSocketContext'
+import type { Comment } from '../lib/useCommentSocket'
 import ErrorAlert from './ErrorAlert'
 
 const MAX_VISIBLE = 100
@@ -38,8 +39,10 @@ export default function CommentFeed() {
   const [draft, setDraft] = useState('')
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  const { incoming, expiredIds, post } = useCommentSocket()
+  const [replyingTo, setReplyingTo] = useState<Comment | null>(null)
+  const { incoming, expiredIds, post } = useCommentSocketContext()
   const listRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     apiFetch(`/api/comments/recent?limit=${MAX_VISIBLE}`)
@@ -76,15 +79,21 @@ export default function CommentFeed() {
     setError(null)
     setPosting(true)
     try {
-      const res = await post(body)
+      const res = await post(body, replyingTo?.id)
       if (res.ok) {
         setDraft('')
+        setReplyingTo(null)
       } else {
         setError(new ApiError(res.message, 0, res.code))
       }
     } finally {
       setPosting(false)
     }
+  }
+
+  function handleReplyClick(comment: Comment) {
+    setReplyingTo(comment)
+    inputRef.current?.focus()
   }
 
   return (
@@ -113,11 +122,24 @@ export default function CommentFeed() {
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 className="rounded-lg bg-ground-raised-2 px-3 py-2"
               >
+                {c.replyTo && (
+                  <p className="mb-1 truncate text-[10px] text-ink-muted">
+                    Replying to <span className="font-medium">{c.replyTo.user.displayName}</span>:{' '}
+                    {c.replyTo.body}
+                  </p>
+                )}
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="text-xs font-medium text-secondary">{c.user.displayName}</span>
                   <span className="shrink-0 text-[10px] text-ink-muted">{timeAgo(c.createdAt)}</span>
                 </div>
                 <p className="mt-0.5 break-words text-sm text-ink">{c.body}</p>
+                <button
+                  type="button"
+                  onClick={() => handleReplyClick(c)}
+                  className="mt-1 text-[10px] font-medium text-ink-muted hover:text-secondary"
+                >
+                  Reply
+                </button>
               </motion.div>
             ))}
           </AnimatePresence>
@@ -132,12 +154,36 @@ export default function CommentFeed() {
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {replyingTo && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-2 flex items-center justify-between gap-2 overflow-hidden rounded-lg bg-ground-raised px-3 py-1.5"
+          >
+            <span className="truncate text-[11px] text-ink-muted">
+              Replying to <span className="font-medium text-ink">{replyingTo.user.displayName}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setReplyingTo(null)}
+              aria-label="Cancel reply"
+              className="shrink-0 text-ink-muted"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <form onSubmit={handleSubmit} className="mt-3 flex gap-2">
         <input
+          ref={inputRef}
           type="text"
           value={draft}
           onChange={(e) => setDraft(e.target.value.slice(0, MAX_BODY_LENGTH))}
-          placeholder="Share your experience…"
+          placeholder={replyingTo ? `Reply to ${replyingTo.user.displayName}…` : 'Share your experience…'}
           maxLength={MAX_BODY_LENGTH}
           className="min-w-0 flex-1 rounded-full border border-hairline bg-ground px-4 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none"
         />

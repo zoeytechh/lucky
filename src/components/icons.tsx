@@ -11,6 +11,19 @@ export function WalletIcon({ size = 18 }: { size?: number }) {
   )
 }
 
+export function ChatIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path
+        d="M3 4h12v8H8l-3 3v-3H3V4z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export function SignalOffIcon({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
