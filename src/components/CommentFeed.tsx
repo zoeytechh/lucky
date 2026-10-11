@@ -80,12 +80,10 @@ function buildThreads(comments: Comment[]): Thread[] {
 
 function CommentRow({
   comment,
-  rootId,
   isMine,
   onReply,
 }: {
   comment: Comment
-  rootId: string
   isMine: boolean
   onReply: (c: Comment) => void
 }) {
@@ -102,7 +100,7 @@ function CommentRow({
         </span>
         <span className="shrink-0 text-[10px] text-ink-muted">{timeAgo(comment.createdAt)}</span>
       </div>
-      {comment.replyTo && comment.replyTo.id !== rootId && (
+      {comment.replyTo && (
         <p className="mt-0.5 truncate text-[10px] text-ink-muted">
           ↳ Replying to <span className="font-medium">{comment.replyTo.user.displayName}</span>
         </p>
@@ -221,7 +219,6 @@ export default function CommentFeed() {
               >
                 <CommentRow
                   comment={root}
-                  rootId={root.id}
                   isMine={root.user.id === user?.id}
                   onReply={handleReplyClick}
                 />
@@ -231,7 +228,6 @@ export default function CommentFeed() {
                       <CommentRow
                         key={reply.id}
                         comment={reply}
-                        rootId={root.id}
                         isMine={reply.user.id === user?.id}
                         onReply={handleReplyClick}
                       />
