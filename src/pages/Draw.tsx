@@ -153,6 +153,25 @@ export default function Draw() {
     prevPendingSettlementRef.current = pendingSettlement
   }, [pendingSettlement, load])
 
+  // Catches up this page's own data (round state, "recent entries") the
+  // moment the tab becomes visible again — the live `progress` socket
+  // event keeps entryCount current, but everything else here (recent
+  // entries, this user's own entry list) was still a one-time fetch from
+  // whenever the page first mounted. A tab left open and returned to
+  // later — the exact case someone playing, backgrounding the app, then
+  // checking back in hits — had nothing to tell it anything changed.
+  useEffect(() => {
+    function refetchIfVisible() {
+      if (document.visibilityState === 'visible') load()
+    }
+    document.addEventListener('visibilitychange', refetchIfVisible)
+    window.addEventListener('focus', refetchIfVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', refetchIfVisible)
+      window.removeEventListener('focus', refetchIfVisible)
+    }
+  }, [load])
+
   async function handleEnter() {
     setError(null)
     setEntering(true)

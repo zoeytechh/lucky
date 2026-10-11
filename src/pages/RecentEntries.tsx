@@ -48,6 +48,23 @@ export default function RecentEntries() {
     loadPage(page).finally(() => setLoading(false))
   }, [page, loadPage])
 
+  // Same reasoning as Draw.tsx's own version of this: a tab left open on
+  // this page and returned to later had no reason to show a newer entry
+  // placed in the meantime — only a page-number click or a fresh mount
+  // ever re-fetched. No loading flicker here, unlike the mount effect
+  // above — this is a silent catch-up, not a first load.
+  useEffect(() => {
+    function refetchIfVisible() {
+      if (document.visibilityState === 'visible') loadPage(page)
+    }
+    document.addEventListener('visibilitychange', refetchIfVisible)
+    window.addEventListener('focus', refetchIfVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', refetchIfVisible)
+      window.removeEventListener('focus', refetchIfVisible)
+    }
+  }, [page, loadPage])
+
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   return (
