@@ -91,11 +91,6 @@ function CommentRow({
 }) {
   return (
     <div className="rounded-lg bg-ground-raised-2 px-3 py-2">
-      {comment.replyTo && comment.replyTo.id !== rootId && (
-        <p className="mb-1 truncate text-[10px] text-ink-muted">
-          ↳ Replying to <span className="font-medium">{comment.replyTo.user.displayName}</span>
-        </p>
-      )}
       <div className="flex items-baseline justify-between gap-3">
         {/* Own name matches the "Comments" header's own color
             (text-ink-muted), everyone else's stays the usual secondary
@@ -107,6 +102,11 @@ function CommentRow({
         </span>
         <span className="shrink-0 text-[10px] text-ink-muted">{timeAgo(comment.createdAt)}</span>
       </div>
+      {comment.replyTo && comment.replyTo.id !== rootId && (
+        <p className="mt-0.5 truncate text-[10px] text-ink-muted">
+          ↳ Replying to <span className="font-medium">{comment.replyTo.user.displayName}</span>
+        </p>
+      )}
       <p className="mt-0.5 break-words text-sm text-ink">{comment.body}</p>
       <button
         type="button"
