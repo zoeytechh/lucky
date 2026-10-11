@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { ApiError, apiFetch } from '../lib/api'
+import { useAuth } from '../lib/AuthContext'
 import { useCommentSocketContext } from '../lib/CommentSocketContext'
 import type { Comment } from '../lib/useCommentSocket'
 import ErrorAlert from './ErrorAlert'
@@ -34,6 +35,7 @@ function timeAgo(iso: string): string {
  * there's nothing to reconcile/dedupe against the broadcast).
  */
 export default function CommentFeed() {
+  const { user } = useAuth()
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
   const [draft, setDraft] = useState('')
@@ -112,36 +114,49 @@ export default function CommentFeed() {
           </p>
         ) : (
           <AnimatePresence initial={false}>
-            {comments.map((c) => (
-              <motion.div
-                key={c.id}
-                layout
-                initial={{ opacity: 0, y: -10, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.97 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                className="rounded-lg bg-ground-raised-2 px-3 py-2"
-              >
-                {c.replyTo && (
-                  <p className="mb-1 truncate text-[10px] text-ink-muted">
-                    Replying to <span className="font-medium">{c.replyTo.user.displayName}</span>:{' '}
-                    {c.replyTo.body}
-                  </p>
-                )}
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-xs font-medium text-secondary">{c.user.displayName}</span>
-                  <span className="shrink-0 text-[10px] text-ink-muted">{timeAgo(c.createdAt)}</span>
-                </div>
-                <p className="mt-0.5 break-words text-sm text-ink">{c.body}</p>
-                <button
-                  type="button"
-                  onClick={() => handleReplyClick(c)}
-                  className="mt-1 text-[10px] font-medium text-ink-muted hover:text-secondary"
+            {comments.map((c) => {
+              const isMine = c.user.id === user?.id
+              return (
+                <motion.div
+                  key={c.id}
+                  layout
+                  initial={{ opacity: 0, y: -10, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
                 >
-                  Reply
-                </button>
-              </motion.div>
-            ))}
+                  <div
+                    className={`max-w-[80%] rounded-lg px-3 py-2 ${
+                      isMine ? 'bg-primary/20' : 'bg-ground-raised-2'
+                    }`}
+                  >
+                    {c.replyTo && (
+                      <p className="mb-1 truncate text-[10px] text-ink-muted">
+                        Replying to <span className="font-medium">{c.replyTo.user.displayName}</span>:{' '}
+                        {c.replyTo.body}
+                      </p>
+                    )}
+                    <div className="flex items-baseline justify-between gap-3">
+                      {!isMine && (
+                        <span className="text-xs font-medium text-secondary">{c.user.displayName}</span>
+                      )}
+                      <span className="ml-auto shrink-0 text-[10px] text-ink-muted">
+                        {timeAgo(c.createdAt)}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 break-words text-sm text-ink">{c.body}</p>
+                    <button
+                      type="button"
+                      onClick={() => handleReplyClick(c)}
+                      className="mt-1 block text-[10px] font-medium text-ink-muted hover:text-secondary"
+                    >
+                      Reply
+                    </button>
+                  </div>
+                </motion.div>
+              )
+            })}
           </AnimatePresence>
         )}
       </div>
