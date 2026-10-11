@@ -353,7 +353,11 @@ export default function Draw() {
                 : `ENTER ${formatNaira(round.entryCostMinor)}`}
         </motion.button>
         {myCurrentEntry ? (
-          <p className="mt-2 text-xs text-ink-muted">Waiting for the draw to complete…</p>
+          <p className="mt-2 text-xs text-ink-muted">
+            {round.entryCount < round.capacity
+              ? `Waiting for ${round.capacity - round.entryCount} more ${round.capacity - round.entryCount === 1 ? 'entrant' : 'entrants'}…`
+              : 'Waiting for the draw to complete…'}
+          </p>
         ) : drawInProgress ? (
           <p className="mt-2 text-xs text-ink-muted">
             A winner is being picked — you can enter the next round once this one's done.

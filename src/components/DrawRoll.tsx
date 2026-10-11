@@ -219,7 +219,9 @@ export default function DrawRoll({ capacity, entered, mySlotNumber, winnerSlotNu
                 {mySlotNumber ?? entered}
               </span>
               <span className="mt-1.5 text-[10px] tracking-wider text-ink-muted">
-                {mySlotNumber !== null ? 'YOUR NUMBER' : `OF ${capacity.toLocaleString()}`}
+                {mySlotNumber !== null
+                  ? `YOUR NUMBER · ${(capacity - entered).toLocaleString()} LEFT`
+                  : `OF ${capacity.toLocaleString()}`}
               </span>
             </motion.div>
           )}
