@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ChatIcon } from './icons'
+import { ChatIcon } from './Icons'
 
 type Props = {
   displayName: string

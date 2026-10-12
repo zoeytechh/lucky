@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useState } from 'react'
-import { IosShareIcon } from './icons'
+import { IosShareIcon } from './Icons'
 
 const DISMISS_KEY = 'lucky:ios-install-dismissed'
 

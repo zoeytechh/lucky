@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Loader from '../components/Loader'
-import { TrophyIcon } from '../components/icons'
+import { TrophyIcon } from '../components/Icons'
 import { apiFetch } from '../lib/api'
 import { formatNaira } from '../lib/money'
 

@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ClockIcon } from './icons'
+import { ClockIcon } from './Icons'
 
 type Props = {
   roundNumber: number

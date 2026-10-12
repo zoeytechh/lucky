@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
 import { useEffect } from 'react'
-import { TrophyIcon } from './icons'
+import { TrophyIcon } from './Icons'
 import { formatNaira } from '../lib/money'
 
 type Props = {

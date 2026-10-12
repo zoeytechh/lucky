@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
 import { Link } from 'react-router-dom'
-import { AlertTriangleIcon, ClockIcon, SignalOffIcon, WalletIcon } from './icons'
+import { AlertTriangleIcon, ClockIcon, SignalOffIcon, WalletIcon } from './Icons'
 import type { ApiError } from '../lib/api'
 
 type Variant = {
