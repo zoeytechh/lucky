@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ApiError, apiFetch } from '../lib/api'
 import { useAuth } from '../lib/AuthContext'
 import { useCommentSocketContext } from '../lib/CommentSocketContext'
@@ -126,7 +127,17 @@ function CommentRow({
  * socket namespace (see useCommentSocket) — one source of truth for
  * every new comment, including the poster's own.
  */
-export default function CommentFeed() {
+export default function CommentFeed({
+  viewAllHref,
+  fullPage = false,
+}: {
+  /** Shown opposite the "Comments" header, linking to the dedicated
+   * comments page — omitted there since you're already on it. */
+  viewAllHref?: string
+  /** The dedicated comments page itself: no fixed height/scroll
+   * container, the list just grows with the page like everywhere else. */
+  fullPage?: boolean
+}) {
   const { user } = useAuth()
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
@@ -194,11 +205,24 @@ export default function CommentFeed() {
 
   return (
     <div className="mt-8">
-      <h2 className="text-[11px] uppercase tracking-wider text-ink-muted">Comments</h2>
+      {/* On the dedicated page the page's own "Comments" title already
+          says this, and there's no View all link to justify the row. */}
+      {!fullPage && (
+        <div className="flex items-center justify-between">
+          <h2 className="text-[11px] uppercase tracking-wider text-ink-muted">Comments</h2>
+          {viewAllHref && (
+            <Link to={viewAllHref} className="text-[11px] tracking-wide text-primary">
+              View all
+            </Link>
+          )}
+        </div>
+      )}
 
       <div
         ref={listRef}
-        className="card-raised mt-3 flex h-[320px] flex-col gap-3 overflow-y-auto rounded-xl bg-ground-raised p-3"
+        className={`card-raised flex flex-col gap-3 rounded-xl bg-ground-raised p-3 ${
+          fullPage ? '' : 'mt-3 h-[320px] overflow-y-auto'
+        }`}
       >
         {loading ? (
           <p className="py-6 text-center text-xs text-ink-muted">Loading…</p>

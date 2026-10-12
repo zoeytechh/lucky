@@ -20,6 +20,7 @@ import Login from './pages/Login'
 const Onboarding = lazy(() => import('./pages/Onboarding'))
 const HowToPlay = lazy(() => import('./pages/HowToPlay'))
 const RecentEntries = lazy(() => import('./pages/RecentEntries'))
+const Comments = lazy(() => import('./pages/Comments'))
 const Winners = lazy(() => import('./pages/Winners'))
 const Wallet = lazy(() => import('./pages/Wallet'))
 const Leaderboard = lazy(() => import('./pages/Leaderboard'))
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
       { index: true, element: <Draw /> },
       { path: 'how-to-play', element: <HowToPlay /> },
       { path: 'draw/recent', element: <RecentEntries /> },
+      { path: 'draw/comments', element: <Comments /> },
       { path: 'draw/winners', element: <Winners /> },
       { path: 'wallet', element: <Wallet /> },
       { path: 'leaderboard', element: <Leaderboard /> },

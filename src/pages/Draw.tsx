@@ -473,7 +473,7 @@ export default function Draw() {
         <span className="font-display text-lg text-primary">→</span>
       </Link>
 
-      <CommentFeed />
+      <CommentFeed viewAllHref="/draw/comments" />
     </main>
   )
 }
