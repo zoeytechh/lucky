@@ -90,7 +90,7 @@ export default function PullToRefresh({ onRefresh }: { onRefresh: () => void }) 
       className={`pointer-events-none fixed inset-x-0 top-0 z-30 flex justify-center transition-opacity duration-200 ${shown ? 'opacity-100' : 'opacity-0'}`}
       style={{ transform: `translateY(${shown ? 16 + Math.min(pull, THRESHOLD) * 0.4 : -100}px)` }}
     >
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-ink shadow-[0_6px_16px_-4px_rgba(0,0,0,0.4)]">
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-ink shadow-[2px_2px_0_0_rgba(0,0,0,0.35)]">
         <motion.svg
           width="16"
           height="16"

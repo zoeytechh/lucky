@@ -43,7 +43,7 @@ export default function EntryConfirmDialog({
         role="dialog"
         aria-modal="true"
         aria-label="Confirm entry"
-        className="relative w-full max-w-xs rounded-3xl bg-ground-raised px-6 py-7 text-center shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)]"
+        className="relative w-full max-w-xs rounded-3xl bg-ground-raised px-6 py-7 text-center shadow-[8px_8px_0_0_rgba(0,0,0,0.35)]"
         initial={{ scale: 0.85, opacity: 0, y: 16 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 8 }}

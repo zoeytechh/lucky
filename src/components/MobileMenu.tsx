@@ -35,7 +35,7 @@ export default function MobileMenu({
             transition={{ duration: 0.2 }}
           />
           <motion.div
-            className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col gap-1 bg-ground-raised p-5 shadow-xl sm:hidden"
+            className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col gap-1 rounded-r-2xl bg-ground-raised p-5 shadow-[4px_0_0_0_rgba(0,0,0,0.35)] sm:hidden"
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}

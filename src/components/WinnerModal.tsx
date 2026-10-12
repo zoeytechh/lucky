@@ -74,7 +74,7 @@ export default function WinnerModal({
         role="dialog"
         aria-modal="true"
         aria-label="Round winner"
-        className="relative w-full max-w-xs overflow-hidden rounded-3xl bg-ground-raised px-6 py-8 text-center shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)]"
+        className="relative w-full max-w-xs overflow-hidden rounded-3xl bg-ground-raised px-6 py-8 text-center shadow-[8px_8px_0_0_rgba(0,0,0,0.35)]"
         initial={{ scale: 0.75, opacity: 0, y: 24 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.85, opacity: 0, y: 12 }}

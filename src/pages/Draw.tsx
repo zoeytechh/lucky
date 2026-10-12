@@ -278,7 +278,7 @@ export default function Draw() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="fixed inset-x-4 top-20 z-30 mx-auto flex max-w-sm items-center gap-3 rounded-xl bg-ground-raised-2 px-4 py-3 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] sm:max-w-xs"
+                className="fixed inset-x-4 top-20 z-30 mx-auto flex max-w-sm items-center gap-3 rounded-xl bg-ground-raised-2 px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.35)] sm:max-w-xs"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
                   <CheckCircleIcon size={18} />

@@ -26,7 +26,7 @@ export default function DrawStartedToast({ roundNumber, onClose }: Props) {
 
   return (
     <motion.div
-      className="fixed inset-x-4 top-20 z-40 mx-auto flex max-w-sm items-center gap-3 rounded-xl bg-ground-raised-2 px-4 py-3 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] sm:inset-x-auto sm:right-4 sm:max-w-xs"
+      className="fixed inset-x-4 top-20 z-40 mx-auto flex max-w-sm items-center gap-3 rounded-xl bg-ground-raised-2 px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.35)] sm:inset-x-auto sm:right-4 sm:max-w-xs"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}

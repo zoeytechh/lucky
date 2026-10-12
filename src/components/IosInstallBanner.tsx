@@ -50,7 +50,7 @@ export default function IosInstallBanner() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 60, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-          className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-sm items-center gap-3 rounded-2xl border border-primary/30 bg-ground-raised px-4 py-3 shadow-[0_12px_28px_-10px_rgba(0,0,0,0.5)]"
+          className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-sm items-center gap-3 rounded-2xl border border-primary/30 bg-ground-raised px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.35)]"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-ink">
             <IosShareIcon size={18} />
