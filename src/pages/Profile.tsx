@@ -117,7 +117,7 @@ export default function Profile() {
       </form>
 
       {push.supported && (
-        <div className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-hairline bg-ground-raised px-4 py-3">
+        <div className="card-raised mt-6 flex items-center justify-between gap-3 rounded-lg border border-hairline bg-ground-raised px-4 py-3">
           <div>
             <span className="block text-sm text-ink">Push notifications</span>
             <span className="block text-xs text-ink-muted">

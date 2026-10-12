@@ -58,7 +58,7 @@ export default function Wallet() {
     <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
       <h1 className="font-display text-xl uppercase tracking-wide text-ink">Wallet</h1>
 
-      <div className="mt-5 rounded-xl bg-ground-raised px-5 py-6 text-center">
+      <div className="card-raised mt-5 rounded-xl bg-ground-raised px-5 py-6 text-center">
         <span className="block text-[11px] tracking-wider text-ink-muted">BALANCE</span>
         {balanceLoading ? (
           <Skeleton className="mx-auto mt-2 h-8 w-28" />
@@ -122,7 +122,7 @@ export default function Wallet() {
             return (
               <div
                 key={tx.id}
-                className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5"
+                className="card-raised-sm flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5"
               >
                 <div>
                   <span className="block text-sm text-ink">

@@ -390,7 +390,7 @@ export default function Draw() {
           CommentFeed below. */}
       <Link
         to="/how-to-play"
-        className="mt-4 flex items-center gap-3 rounded-lg border border-hairline bg-ground-raised px-4 py-3 text-ink transition-colors active:bg-ground"
+        className="card-raised mt-4 flex items-center gap-3 rounded-lg border border-hairline bg-ground-raised px-4 py-3 text-ink transition-colors active:bg-ground"
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ground text-primary">
           <QuestionIcon size={18} />
@@ -435,7 +435,7 @@ export default function Draw() {
             {recentEntries.map((entry) => (
               <div
                 key={entry.id}
-                className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5"
+                className="card-raised-sm flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5"
               >
                 <div className="flex flex-col items-start">
                   <span className="text-sm text-ink">{entry.user.displayName}</span>
@@ -451,7 +451,7 @@ export default function Draw() {
             ))}
           </div>
         ) : (
-          <p className="mt-3 rounded-lg bg-ground-raised px-4 py-4 text-center text-xs text-ink-muted">
+          <p className="card-raised-sm mt-3 rounded-lg bg-ground-raised px-4 py-4 text-center text-xs text-ink-muted">
             No entries yet. Place your first one above.
           </p>
         )}

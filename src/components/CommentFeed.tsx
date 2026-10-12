@@ -198,7 +198,7 @@ export default function CommentFeed() {
 
       <div
         ref={listRef}
-        className="mt-3 flex h-[320px] flex-col gap-3 overflow-y-auto rounded-xl bg-ground-raised p-3"
+        className="card-raised mt-3 flex h-[320px] flex-col gap-3 overflow-y-auto rounded-xl bg-ground-raised p-3"
       >
         {loading ? (
           <p className="py-6 text-center text-xs text-ink-muted">Loading…</p>

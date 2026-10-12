@@ -86,7 +86,7 @@ export default function Admin() {
     <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
       <h1 className="font-display text-xl uppercase tracking-wide text-ink">Admin</h1>
 
-      <div className="mt-5 rounded-xl bg-ground-raised px-5 py-6 text-center">
+      <div className="card-raised mt-5 rounded-xl bg-ground-raised px-5 py-6 text-center">
         <span className="block text-[11px] tracking-wider text-ink-muted">
           SYSTEM WALLET BALANCE
         </span>
@@ -168,7 +168,7 @@ export default function Admin() {
           {sends.map((s) => (
             <div
               key={s.id}
-              className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5"
+              className="card-raised-sm flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5"
             >
               <div>
                 <span className="block text-sm text-ink">{s.recipient}</span>

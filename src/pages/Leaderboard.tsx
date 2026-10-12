@@ -20,7 +20,7 @@ export default function Leaderboard() {
         {TOP_THREE.map((row) => (
           <div
             key={row.rank}
-            className="flex items-center gap-3 rounded-xl bg-ground-raised px-4 py-3"
+            className="card-raised flex items-center gap-3 rounded-xl bg-ground-raised px-4 py-3"
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary font-display text-sm text-primary-ink">
               {row.rank}

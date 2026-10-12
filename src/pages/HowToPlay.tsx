@@ -76,7 +76,7 @@ export default function HowToPlay() {
           decides three things at once:
         </p>
         <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5">
+          <div className="card-raised-sm flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5">
             <span>1 winner</span>
             {round ? (
               <span className="font-display text-success">{formatNaira(round.winnerPayoutMinor)}</span>
@@ -84,7 +84,7 @@ export default function HowToPlay() {
               <Skeleton className="h-4 w-16" />
             )}
           </div>
-          <div className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5">
+          <div className="card-raised-sm flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5">
             {refundCount !== null ? (
               <span>{refundCount.toLocaleString()} refunded</span>
             ) : (
@@ -96,7 +96,7 @@ export default function HowToPlay() {
               <Skeleton className="h-4 w-16" />
             )}
           </div>
-          <div className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5">
+          <div className="card-raised-sm flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5">
             {lossCount !== null ? (
               <span>{lossCount.toLocaleString()} lose their stake</span>
             ) : (

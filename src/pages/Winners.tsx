@@ -67,7 +67,7 @@ export default function Winners() {
             {winners.map((winner) => (
               <div
                 key={winner.id}
-                className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5"
+                className="card-raised-sm flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5"
               >
                 <div className="flex flex-col items-start">
                   <span className="text-sm text-ink">{winner.user.displayName}</span>
