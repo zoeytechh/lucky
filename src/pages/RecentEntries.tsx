@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Loader from '../components/Loader'
 import Paginator from '../components/Paginator'
+import Skeleton from '../components/Skeleton'
 import { apiFetch } from '../lib/api'
 import { formatRoundDate } from '../lib/date'
 
@@ -77,8 +77,19 @@ export default function RecentEntries() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <Loader size="lg" />
+        <div className="mt-5 flex flex-col gap-2">
+          {Array.from({ length: 8 }, (_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5"
+            >
+              <div className="flex flex-col items-start gap-1.5">
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-3 w-36" />
+              </div>
+              <Skeleton className="h-3.5 w-14" />
+            </div>
+          ))}
         </div>
       ) : (
         <>

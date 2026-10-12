@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import AnimatedBalance from '../components/AnimatedBalance'
-import Loader from '../components/Loader'
 import Paginator from '../components/Paginator'
+import Skeleton from '../components/Skeleton'
 import { apiFetch } from '../lib/api'
 import { formatNaira } from '../lib/money'
 import { useWallet } from '../lib/WalletContext'
@@ -61,7 +61,7 @@ export default function Wallet() {
       <div className="mt-5 rounded-xl bg-ground-raised px-5 py-6 text-center">
         <span className="block text-[11px] tracking-wider text-ink-muted">BALANCE</span>
         {balanceLoading ? (
-          <span className="mt-1 block font-display text-3xl tabular-nums text-primary">—</span>
+          <Skeleton className="mx-auto mt-2 h-8 w-28" />
         ) : (
           <AnimatedBalance
             balanceMinor={balanceMinor}
@@ -97,8 +97,19 @@ export default function Wallet() {
       </h2>
 
       {transactions === null ? (
-        <div className="mt-3 flex items-center justify-center rounded-xl border border-hairline py-10">
-          <Loader label="Loading" />
+        <div className="mt-3 flex flex-col gap-2">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5"
+            >
+              <div className="flex flex-col items-start gap-1.5">
+                <Skeleton className="h-3.5 w-32" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+              <Skeleton className="h-3.5 w-16" />
+            </div>
+          ))}
         </div>
       ) : transactions.length === 0 ? (
         <p className="mt-3 rounded-xl border border-hairline py-10 text-center text-xs text-ink-muted">

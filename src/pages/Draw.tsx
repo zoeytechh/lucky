@@ -6,7 +6,7 @@ import DrawRoll from '../components/DrawRoll'
 import EntryConfirmDialog from '../components/EntryConfirmDialog'
 import ErrorAlert from '../components/ErrorAlert'
 import { CheckCircleIcon, ChevronRightIcon, QuestionIcon, TrophyIcon } from '../components/Icons'
-import Loader from '../components/Loader'
+import Skeleton from '../components/Skeleton'
 import { ApiError, apiFetch } from '../lib/api'
 import { useDrawSocketContext } from '../lib/DrawSocketContext'
 import { formatRoundDate } from '../lib/date'
@@ -79,7 +79,6 @@ export default function Draw() {
   const [round, setRound] = useState<Round | null>(null)
   const [myEntries, setMyEntries] = useState<MyEntry[]>([])
   const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([])
-  const [loading, setLoading] = useState(true)
   const [entering, setEntering] = useState(false)
   const [error, setError] = useState<ApiError | Error | null>(null)
   const [confirmation, setConfirmation] = useState<string | null>(null)
@@ -121,7 +120,7 @@ export default function Draw() {
   }, [])
 
   useEffect(() => {
-    load().finally(() => setLoading(false))
+    load()
   }, [load])
 
   // Live progress — every connected viewer's ring fills in step with
@@ -232,15 +231,7 @@ export default function Draw() {
     }
   }
 
-  if (loading || !round) {
-    return (
-      <main className="flex justify-center py-16">
-        <Loader size="lg" />
-      </main>
-    )
-  }
-
-  const myCurrentEntry = myEntries.find((e) => e.roundId === round.roundId)
+  const myCurrentEntry = round ? myEntries.find((e) => e.roundId === round.roundId) : undefined
 
   // True for the whole suspense-through-hold window, whether this viewer
   // has been watching since the round filled (pendingSettlement comes
@@ -250,7 +241,7 @@ export default function Draw() {
   // nextEntriesOpenAt, so the button being disabled here is enforcement
   // the backend actually holds, not just a UI nicety.
   const drawInProgress =
-    !!pendingSettlement || (round.entriesOpenAt ? new Date(round.entriesOpenAt) > new Date() : false)
+    !!pendingSettlement || (round?.entriesOpenAt ? new Date(round.entriesOpenAt) > new Date() : false)
 
   // A UI nicety on top of the real guarantee, not a replacement for it —
   // placeEntry() checks this same comparison server-side, before the
@@ -258,135 +249,145 @@ export default function Draw() {
   // INSUFFICIENT_BALANCE regardless of what this button shows. This just
   // saves a doomed round-trip: no point letting someone tap Enter, wait,
   // and get told no when the wallet balance already says so.
-  const insufficientBalance = balanceMinor !== null && BigInt(balanceMinor) < BigInt(round.entryCostMinor)
+  const insufficientBalance =
+    !!round && balanceMinor !== null && BigInt(balanceMinor) < BigInt(round.entryCostMinor)
 
   return (
     <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
-      <AnimatePresence>
-        {confirmingEntry && (
-          <EntryConfirmDialog
-            entryCostMinor={round.entryCostMinor}
-            stakeMinor={round.stakeMinor}
-            feeMinor={round.feeMinor}
-            armed={dialogArmed}
-            onCancel={() => setConfirmingEntry(false)}
-            onConfirm={() => {
-              setConfirmingEntry(false)
-              handleEnter()
-            }}
-          />
-        )}
-      </AnimatePresence>
+      {round ? (
+        <>
+          <AnimatePresence>
+            {confirmingEntry && (
+              <EntryConfirmDialog
+                entryCostMinor={round.entryCostMinor}
+                stakeMinor={round.stakeMinor}
+                feeMinor={round.feeMinor}
+                armed={dialogArmed}
+                onCancel={() => setConfirmingEntry(false)}
+                onConfirm={() => {
+                  setConfirmingEntry(false)
+                  handleEnter()
+                }}
+              />
+            )}
+          </AnimatePresence>
 
-      <AnimatePresence>
-        {confirmation && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-4 top-20 z-30 mx-auto flex max-w-sm items-center gap-3 rounded-xl bg-ground-raised-2 px-4 py-3 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] sm:max-w-xs"
-          >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
-              <CheckCircleIcon size={18} />
+          <AnimatePresence>
+            {confirmation && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="fixed inset-x-4 top-20 z-30 mx-auto flex max-w-sm items-center gap-3 rounded-xl bg-ground-raised-2 px-4 py-3 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] sm:max-w-xs"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
+                  <CheckCircleIcon size={18} />
+                </span>
+                <span className="text-xs font-bold leading-snug text-ink">{confirmation}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex flex-col items-center text-center">
+            <span className="mb-4 text-[11px] uppercase tracking-[0.15em] text-ink-muted">
+              {pendingSettlement
+                ? `Round ${pendingSettlement.roundNumber}`
+                : round.roundNumber
+                  ? `Round ${round.roundNumber}`
+                  : 'Starting soon'}
             </span>
-            <span className="text-xs font-bold leading-snug text-ink">{confirmation}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      <div className="flex flex-col items-center text-center">
-        <span className="mb-4 text-[11px] uppercase tracking-[0.15em] text-ink-muted">
-          {pendingSettlement
-            ? `Round ${pendingSettlement.roundNumber}`
-            : round.roundNumber
-              ? `Round ${round.roundNumber}`
-              : 'Starting soon'}
-        </span>
+            <DrawRoll
+              capacity={round.capacity}
+              entered={pendingSettlement ? round.capacity : round.entryCount}
+              mySlotNumber={myCurrentEntry?.slotNumber ?? null}
+              winnerSlotNumber={revealWinnerSlot}
+              revealAt={pendingSettlement?.revealAt ?? null}
+            />
 
-        <DrawRoll
-          capacity={round.capacity}
-          entered={pendingSettlement ? round.capacity : round.entryCount}
-          mySlotNumber={myCurrentEntry?.slotNumber ?? null}
-          winnerSlotNumber={revealWinnerSlot}
-          revealAt={pendingSettlement?.revealAt ?? null}
-        />
+            <motion.button
+              type="button"
+              onClick={() => setConfirmingEntry(true)}
+              disabled={entering || !!myCurrentEntry || drawInProgress || insufficientBalance}
+              whileTap={{ scale: 0.95 }}
+              className="mt-6 rounded-full bg-primary px-8 py-3 font-display text-base text-primary-ink shadow-[0_8px_22px_-8px_rgba(255,138,126,0.55)] disabled:opacity-60"
+            >
+              {myCurrentEntry
+                ? `YOU'RE IN AT SLOT ${myCurrentEntry.slotNumber}`
+                : drawInProgress
+                  ? 'DRAW IN PROGRESS…'
+                  : insufficientBalance
+                    ? 'INSUFFICIENT BALANCE'
+                    : entering
+                      ? 'ENTERING…'
+                      : `ENTER ${formatNaira(round.entryCostMinor)}`}
+            </motion.button>
+            {myCurrentEntry ? (
+              <p className="mt-2 text-xs text-ink-muted">
+                {round.entryCount < round.capacity
+                  ? `Waiting for ${round.capacity - round.entryCount} more ${round.capacity - round.entryCount === 1 ? 'entrant' : 'entrants'}…`
+                  : 'Waiting for the draw to complete…'}
+              </p>
+            ) : drawInProgress ? (
+              <p className="mt-2 text-xs text-ink-muted">
+                A winner is being picked — you can enter the next round once this one's done.
+              </p>
+            ) : insufficientBalance ? (
+              <p className="mt-2 text-xs text-ink-muted">
+                You need {formatNaira(round.entryCostMinor)} to enter —{' '}
+                <Link to="/wallet" className="text-secondary underline">
+                  top up your wallet
+                </Link>
+                .
+              </p>
+            ) : (
+              <p className="mt-2 text-xs text-ink-muted">
+                {formatNaira(round.stakeMinor)} entry fee + {formatNaira(round.feeMinor)} app charge
+              </p>
+            )}
 
-        <motion.button
-          type="button"
-          onClick={() => setConfirmingEntry(true)}
-          disabled={entering || !!myCurrentEntry || drawInProgress || insufficientBalance}
-          whileTap={{ scale: 0.95 }}
-          className="mt-6 rounded-full bg-primary px-8 py-3 font-display text-base text-primary-ink shadow-[0_8px_22px_-8px_rgba(255,138,126,0.55)] disabled:opacity-60"
-        >
-          {myCurrentEntry
-            ? `YOU'RE IN AT SLOT ${myCurrentEntry.slotNumber}`
-            : drawInProgress
-              ? 'DRAW IN PROGRESS…'
-              : insufficientBalance
-                ? 'INSUFFICIENT BALANCE'
-                : entering
-                  ? 'ENTERING…'
-                  : `ENTER ${formatNaira(round.entryCostMinor)}`}
-        </motion.button>
-        {myCurrentEntry ? (
-          <p className="mt-2 text-xs text-ink-muted">
-            {round.entryCount < round.capacity
-              ? `Waiting for ${round.capacity - round.entryCount} more ${round.capacity - round.entryCount === 1 ? 'entrant' : 'entrants'}…`
-              : 'Waiting for the draw to complete…'}
-          </p>
-        ) : drawInProgress ? (
-          <p className="mt-2 text-xs text-ink-muted">
-            A winner is being picked — you can enter the next round once this one's done.
-          </p>
-        ) : insufficientBalance ? (
-          <p className="mt-2 text-xs text-ink-muted">
-            You need {formatNaira(round.entryCostMinor)} to enter —{' '}
-            <Link to="/wallet" className="text-secondary underline">
-              top up your wallet
-            </Link>
-            .
-          </p>
-        ) : (
-          <p className="mt-2 text-xs text-ink-muted">
-            {formatNaira(round.stakeMinor)} entry fee + {formatNaira(round.feeMinor)} app charge
-          </p>
-        )}
+            <AnimatePresence>
+              {error && (
+                <div className="mt-3 w-full">
+                  <ErrorAlert error={error} action={{ label: 'Go to wallet', to: '/wallet' }} />
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
 
-        <AnimatePresence>
-          {error && (
-            <div className="mt-3 w-full">
-              <ErrorAlert error={error} action={{ label: 'Go to wallet', to: '/wallet' }} />
+          <div className="mt-8 grid grid-cols-3 gap-2 border-y border-hairline py-4 text-center">
+            <div>
+              <span className="block font-display text-sm text-success">
+                {formatNaira(round.winnerPayoutMinor)}
+              </span>
+              <span className="mt-1 block text-[10px] tracking-wide text-ink-muted">Winner</span>
             </div>
-          )}
-        </AnimatePresence>
-      </div>
+            <div>
+              <span className="block font-display text-sm text-ink">
+                {formatNaira(round.stakeMinor)}
+              </span>
+              <span className="mt-1 block text-[10px] tracking-wide text-ink-muted">Refunded</span>
+            </div>
+            <div>
+              <span className="block font-display text-sm text-danger">
+                {Math.floor((round.capacity - 1) / 2)}
+              </span>
+              <span className="mt-1 block text-[10px] tracking-wide text-ink-muted">Lose it</span>
+            </div>
+          </div>
 
-      <div className="mt-8 grid grid-cols-3 gap-2 border-y border-hairline py-4 text-center">
-        <div>
-          <span className="block font-display text-sm text-success">
-            {formatNaira(round.winnerPayoutMinor)}
-          </span>
-          <span className="mt-1 block text-[10px] tracking-wide text-ink-muted">Winner</span>
-        </div>
-        <div>
-          <span className="block font-display text-sm text-ink">
-            {formatNaira(round.stakeMinor)}
-          </span>
-          <span className="mt-1 block text-[10px] tracking-wide text-ink-muted">Refunded</span>
-        </div>
-        <div>
-          <span className="block font-display text-sm text-danger">
-            {Math.floor((round.capacity - 1) / 2)}
-          </span>
-          <span className="mt-1 block text-[10px] tracking-wide text-ink-muted">Lose it</span>
-        </div>
-      </div>
+          <p className="mt-6 text-center text-xs leading-relaxed text-ink-muted">
+            {round.capacity.toLocaleString()} entries a round. One winner takes half the pool.
+            Half of everyone else gets their stake back. The rest fund the winner.
+          </p>
+        </>
+      ) : (
+        <DrawTopSkeleton />
+      )}
 
-      <p className="mt-6 text-center text-xs leading-relaxed text-ink-muted">
-        {round.capacity.toLocaleString()} entries a round. One winner takes half the pool. Half
-        of everyone else gets their stake back. The rest fund the winner.
-      </p>
-
+      {/* Static — doesn't depend on round data, so it renders immediately
+          regardless of loading state, same as the Past Winners card and
+          CommentFeed below. */}
       <Link
         to="/how-to-play"
         className="mt-4 flex items-center gap-3 rounded-lg border border-hairline bg-ground-raised px-4 py-3 text-ink transition-colors active:bg-ground"
@@ -414,7 +415,22 @@ export default function Draw() {
             </Link>
           )}
         </div>
-        {recentEntries.length > 0 ? (
+        {!round ? (
+          <div className="mt-3 flex flex-col gap-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5"
+              >
+                <div className="flex flex-col items-start gap-1.5">
+                  <Skeleton className="h-3.5 w-24" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-3.5 w-12" />
+              </div>
+            ))}
+          </div>
+        ) : recentEntries.length > 0 ? (
           <div className="mt-3 flex flex-col gap-2">
             {recentEntries.map((entry) => (
               <div
@@ -459,5 +475,32 @@ export default function Draw() {
 
       <CommentFeed />
     </main>
+  )
+}
+
+/** Shaped like the real top section: round label, the 148px ring, the
+ * pill-shaped Enter button, caption, and the 3-column stats row —
+ * everything that section above needs `round` for. */
+function DrawTopSkeleton() {
+  return (
+    <>
+      <div className="flex flex-col items-center text-center">
+        <Skeleton className="mb-4 h-3 w-20" />
+        <Skeleton className="h-[148px] w-[148px] rounded-full" />
+        <Skeleton className="mt-6 h-12 w-44 rounded-full" />
+        <Skeleton className="mt-3 h-3 w-48" />
+      </div>
+
+      <div className="mt-8 grid grid-cols-3 gap-2 border-y border-hairline py-4 text-center">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex flex-col items-center gap-1.5">
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-2.5 w-10" />
+          </div>
+        ))}
+      </div>
+
+      <Skeleton className="mx-auto mt-6 h-3 w-56" />
+    </>
   )
 }

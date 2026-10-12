@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import ErrorAlert from '../components/ErrorAlert'
-import Loader from '../components/Loader'
+import Skeleton from '../components/Skeleton'
 import { apiFetch } from '../lib/api'
 import { useAuth } from '../lib/AuthContext'
 import { formatNaira } from '../lib/money'
@@ -90,9 +90,13 @@ export default function Admin() {
         <span className="block text-[11px] tracking-wider text-ink-muted">
           SYSTEM WALLET BALANCE
         </span>
-        <span className="mt-1 block font-display text-3xl tabular-nums text-primary">
-          {balanceMinor === null ? '—' : formatNaira(balanceMinor)}
-        </span>
+        {balanceMinor === null ? (
+          <Skeleton className="mx-auto mt-2 h-8 w-32" />
+        ) : (
+          <span className="mt-1 block font-display text-3xl tabular-nums text-primary">
+            {formatNaira(balanceMinor)}
+          </span>
+        )}
       </div>
 
       <h2 className="mt-8 text-[11px] uppercase tracking-wider text-ink-muted">
@@ -141,8 +145,19 @@ export default function Admin() {
         Recent sends
       </h2>
       {sends === null ? (
-        <div className="mt-3 flex items-center justify-center rounded-xl border border-hairline py-10">
-          <Loader label="Loading" />
+        <div className="mt-3 flex flex-col gap-2">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5"
+            >
+              <div className="flex flex-col items-start gap-1.5">
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+              <Skeleton className="h-3.5 w-16" />
+            </div>
+          ))}
         </div>
       ) : sends.length === 0 ? (
         <p className="mt-3 rounded-xl border border-hairline py-10 text-center text-xs text-ink-muted">

@@ -1,9 +1,14 @@
-const SIZES = {
-  sm: { box: 20, track: 4 },
-  md: { box: 36, track: 6 },
-  lg: { box: 56, track: 8 },
-} as const
+import PartyMascot from './PartyMascot'
 
+const SIZES = { sm: 20, md: 36, lg: 56 } as const
+
+/**
+ * The in-app "something's happening" indicator — for an action request
+ * in flight (a button press, a pagination click), not a page's own
+ * initial data load (that's Skeleton, shaped like the content that's
+ * coming). Reuses the nav's own dancing mascot rather than a generic
+ * spinner, same figure, just always in its energetic `dance` mode here.
+ */
 export default function Loader({
   size = 'md',
   label,
@@ -11,23 +16,9 @@ export default function Loader({
   size?: keyof typeof SIZES
   label?: string
 }) {
-  const { box, track } = SIZES[size]
-
   return (
     <div className="inline-flex flex-col items-center gap-2">
-      <div
-        className="motion-safe:animate-spin rounded-full"
-        style={{
-          width: box,
-          height: box,
-          background: `conic-gradient(var(--color-primary) 0% 22%, rgba(244,239,222,0.14) 22% 100%)`,
-        }}
-      >
-        <div
-          className="rounded-full bg-ground"
-          style={{ margin: track, width: box - track * 2, height: box - track * 2 }}
-        />
-      </div>
+      <PartyMascot size={SIZES[size]} dance />
       {label && (
         <span className="font-body text-[10px] uppercase tracking-wider text-ink-muted">
           {label}

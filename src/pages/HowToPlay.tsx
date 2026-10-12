@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Loader from '../components/Loader'
 import { TrophyIcon } from '../components/Icons'
+import Skeleton from '../components/Skeleton'
 import { apiFetch } from '../lib/api'
 import { formatNaira } from '../lib/money'
 
@@ -37,17 +37,14 @@ export default function HowToPlay() {
     apiFetch('/api/draw/current').then(setRound)
   }, [])
 
-  if (!round) {
-    return (
-      <main className="flex justify-center py-16">
-        <Loader size="lg" />
-      </main>
-    )
-  }
-
-  const nonWinnerCount = round.capacity - 1
-  const refundCount = Math.ceil(nonWinnerCount / 2)
-  const lossCount = Math.floor(nonWinnerCount / 2)
+  // This page is almost entirely static explainer copy — sections 3-5
+  // below never touch `round` at all. Only a handful of numbers in
+  // sections 1-2 come from the backend, so only those wait: the page
+  // itself renders immediately, each dynamic spot shows a skeleton
+  // shaped like the value that's coming until the fetch resolves.
+  const nonWinnerCount = round ? round.capacity - 1 : null
+  const refundCount = nonWinnerCount !== null ? Math.ceil(nonWinnerCount / 2) : null
+  const lossCount = nonWinnerCount !== null ? Math.floor(nonWinnerCount / 2) : null
 
   return (
     <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
@@ -58,14 +55,18 @@ export default function HowToPlay() {
 
       <Section title="1. Enter a round">
         <p>
-          Every entry costs {formatNaira(round.entryCostMinor)}: {formatNaira(round.stakeMinor)}{' '}
-          goes into the prize pool as your stake, and {formatNaira(round.feeMinor)} is the
-          platform's app fee, kept regardless of the outcome.
+          Every entry costs{' '}
+          {round ? formatNaira(round.entryCostMinor) : <Skeleton className="inline-block h-3.5 w-14 align-middle" />}
+          : {round ? formatNaira(round.stakeMinor) : <Skeleton className="inline-block h-3.5 w-14 align-middle" />}{' '}
+          goes into the prize pool as your stake, and{' '}
+          {round ? formatNaira(round.feeMinor) : <Skeleton className="inline-block h-3.5 w-12 align-middle" />} is
+          the platform's app fee, kept regardless of the outcome.
         </p>
         <p>
-          A round fills with exactly {round.capacity.toLocaleString()} entries. The instant the
-          last slot is taken, the round settles immediately and a new one opens right away.
-          Rounds aren't on a timer, they fill whenever they fill.
+          A round fills with exactly{' '}
+          {round ? round.capacity.toLocaleString() : <Skeleton className="inline-block h-3.5 w-10 align-middle" />}{' '}
+          entries. The instant the last slot is taken, the round settles immediately and a new one
+          opens right away. Rounds aren't on a timer, they fill whenever they fill.
         </p>
       </Section>
 
@@ -77,16 +78,30 @@ export default function HowToPlay() {
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5">
             <span>1 winner</span>
-            <span className="font-display text-success">
-              {formatNaira(round.winnerPayoutMinor)}
-            </span>
+            {round ? (
+              <span className="font-display text-success">{formatNaira(round.winnerPayoutMinor)}</span>
+            ) : (
+              <Skeleton className="h-4 w-16" />
+            )}
           </div>
           <div className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5">
-            <span>{refundCount.toLocaleString()} refunded</span>
-            <span className="font-display text-ink">{formatNaira(round.stakeMinor)} back</span>
+            {refundCount !== null ? (
+              <span>{refundCount.toLocaleString()} refunded</span>
+            ) : (
+              <Skeleton className="h-4 w-20" />
+            )}
+            {round ? (
+              <span className="font-display text-ink">{formatNaira(round.stakeMinor)} back</span>
+            ) : (
+              <Skeleton className="h-4 w-16" />
+            )}
           </div>
           <div className="flex items-center justify-between rounded-lg bg-ground-raised px-4 py-2.5">
-            <span>{lossCount.toLocaleString()} lose their stake</span>
+            {lossCount !== null ? (
+              <span>{lossCount.toLocaleString()} lose their stake</span>
+            ) : (
+              <Skeleton className="h-4 w-28" />
+            )}
             <span className="font-display text-danger">₦0</span>
           </div>
         </div>
