@@ -47,32 +47,27 @@ button:not(:disabled),
 
 /* The app's one card treatment, used everywhere a bg-ground-raised
    surface should read as a raised, tactile card rather than a flat
-   block of color: a crisp, zero-blur lining that hugs the card's own
-   edge (spread, no offset — not a shadow cast off to one side, which
-   read as floating away from the element instead of belonging to it)
-   combined with a top highlight and a bottom inset shadow, which
-   together are what actually read as "raised/embossed" (a neumorphic
-   cue) without dropping to the near-invisible same-background-color
-   contrast true neumorphism relies on — that would fight this app's
-   bold, high-contrast "Owambe Jackpot" identity instead of fitting
-   it. */
+   block of color. Deliberately minimal — a hairline-thin lining that
+   hugs the card's own edge (spread, no offset, so it never reads as
+   floating away from the element) plus a barely-there top highlight
+   and bottom inset shadow, just enough to sell "raised/embossed"
+   without the card treatment drawing attention to itself. */
 @utility card-raised {
   box-shadow:
-    0 0 0 2px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 0 rgba(244, 239, 222, 0.12),
-    inset 0 -1px 0 0 rgba(0, 0, 0, 0.12);
+    0 0 0 1px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 0 rgba(244, 239, 222, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06);
 }
 
-/* Same idea, lighter — for repeated rows in a list (recent entries,
-   transactions, comments). The full card-raised lining stacked once
-   per row in a 20-item list reads as cluttered, not smooth; this
-   keeps every row visibly raised without the page turning into a wall
-   of shadows. */
+/* Same idea, for repeated rows in a list (recent entries, transactions,
+   comments) — identical weight to card-raised now that both are this
+   minimal; kept as a separate utility so list rows and standalone
+   cards can still diverge later without touching each other. */
 @utility card-raised-sm {
   box-shadow:
-    0 0 0 1.5px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 0 rgba(244, 239, 222, 0.08),
-    inset 0 -1px 0 0 rgba(0, 0, 0, 0.08);
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 0 rgba(244, 239, 222, 0.05),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.05);
 }
 
 @media (prefers-reduced-motion: reduce) {
