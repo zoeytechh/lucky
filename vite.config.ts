@@ -27,9 +27,12 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       injectManifest: {
-        // Matches generateSW's default precache globbing — keeps the
-        // same set of build assets precached as before the switch.
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // No 'html' here — index.html is deliberately excluded from
+        // precache and served NetworkFirst instead (see sw.ts) so it
+        // always reflects whichever build is actually live, rather
+        // than a precached shell pointing at hashed JS/CSS files a
+        // later deploy may have already removed.
+        globPatterns: ['**/*.{js,css,ico,png,svg,woff2}'],
       },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png'],
       manifest: {

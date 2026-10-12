@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
-import { createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
+import { precacheAndRoute } from 'workbox-precaching'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
+import { NetworkFirst } from 'workbox-strategies'
 
 // injectManifest (not generateSW) is what this file requires — needed
 // specifically so this SW can carry its own push/notificationclick
@@ -13,14 +14,26 @@ declare const self: ServiceWorkerGlobalScope & {
 
 precacheAndRoute(self.__WB_MANIFEST)
 
-// Same behavior as the old generateSW config's navigateFallbackDenylist
-// — every navigation falls back to the cached app shell EXCEPT API
-// routes, which must always hit the real server (balances, draw state,
-// auth — nothing here is safe to ever serve stale/offline).
+// Every navigation falls back to the app shell EXCEPT API routes, which
+// must always hit the real server (balances, draw state, auth —
+// nothing here is safe to ever serve stale/offline). Deliberately
+// NetworkFirst rather than a precached handler: index.html isn't in
+// globPatterns (see vite.config.ts) because a precached shell keeps
+// pointing at whatever JS/CSS hashes were current *when it was cached*
+// — and Vercel's production alias doesn't keep an old deploy's hashed
+// files around once a newer one replaces them. Served stale (a real
+// race right after UpdatePrompt's Refresh triggers skipWaiting, before
+// the new worker has actually finished taking over), that shell's
+// <script> tag 404s and nothing ever runs — seen for real as a blank
+// screen. Network-first always gets the shell that matches whatever is
+// actually live; the cache fallback (populated by each successful
+// fetch below) only kicks in fully offline, where a slightly-stale
+// shell beats nothing.
 registerRoute(
-  new NavigationRoute(createHandlerBoundToURL('/index.html'), {
-    denylist: [/^\/api/],
-  }),
+  new NavigationRoute(
+    new NetworkFirst({ cacheName: 'lucky-you-shell', networkTimeoutSeconds: 3 }),
+    { denylist: [/^\/api/] },
+  ),
 )
 
 // vite-plugin-pwa's own client code (virtual:pwa-register) sends this
