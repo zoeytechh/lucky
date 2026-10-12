@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import CommentFeed from '../components/CommentFeed'
 import DrawRoll from '../components/DrawRoll'
+import EntryConfirmDialog from '../components/EntryConfirmDialog'
 import ErrorAlert from '../components/ErrorAlert'
 import { CheckCircleIcon, ChevronRightIcon, QuestionIcon, TrophyIcon } from '../components/Icons'
 import Loader from '../components/Loader'
@@ -263,52 +264,17 @@ export default function Draw() {
     <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
       <AnimatePresence>
         {confirmingEntry && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-ground/80 px-6 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setConfirmingEntry(false)}
-          >
-            <motion.div
-              role="dialog"
-              aria-modal="true"
-              aria-label="Confirm entry"
-              className="relative w-full max-w-xs rounded-3xl bg-ground-raised px-6 py-7 text-center shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)]"
-              initial={{ scale: 0.85, opacity: 0, y: 16 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 8 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 24 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <p className="font-display text-lg uppercase text-ink">Enter this draw?</p>
-              <p className="mt-2 text-sm text-ink-muted">
-                You'll be charged {formatNaira(round.entryCostMinor)} — {formatNaira(round.stakeMinor)}{' '}
-                entry fee + {formatNaira(round.feeMinor)} app charge.
-              </p>
-              <div className="mt-5 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setConfirmingEntry(false)}
-                  className="flex-1 rounded-full bg-ground-raised-2 py-2.5 font-display text-sm text-ink"
-                >
-                  CANCEL
-                </button>
-                <button
-                  type="button"
-                  disabled={!dialogArmed}
-                  onClick={() => {
-                    if (!dialogArmed) return
-                    setConfirmingEntry(false)
-                    handleEnter()
-                  }}
-                  className="flex-1 rounded-full bg-primary py-2.5 font-display text-sm text-primary-ink disabled:opacity-60"
-                >
-                  YES, ENTER
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+          <EntryConfirmDialog
+            entryCostMinor={round.entryCostMinor}
+            stakeMinor={round.stakeMinor}
+            feeMinor={round.feeMinor}
+            armed={dialogArmed}
+            onCancel={() => setConfirmingEntry(false)}
+            onConfirm={() => {
+              setConfirmingEntry(false)
+              handleEnter()
+            }}
+          />
         )}
       </AnimatePresence>
 

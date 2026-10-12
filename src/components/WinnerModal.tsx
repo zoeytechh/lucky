@@ -1,6 +1,7 @@
 import { motion } from 'motion/react'
 import PartyMascot from './PartyMascot'
 import { formatNaira } from '../lib/money'
+import { useFocusTrap } from '../lib/useFocusTrap'
 
 type Props = {
   displayName: string
@@ -56,6 +57,8 @@ export default function WinnerModal({
   isYou,
   onClose,
 }: Props) {
+  const dialogRef = useFocusTrap(onClose)
+
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ground/80 px-6 backdrop-blur-sm"
@@ -67,6 +70,7 @@ export default function WinnerModal({
       <FallingRibbons />
 
       <motion.div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label="Round winner"
