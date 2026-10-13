@@ -6,7 +6,7 @@ import { useAuth } from '../lib/AuthContext'
 import { usePushNotifications } from '../lib/usePushNotifications'
 
 export default function Profile() {
-  const { user, uploadAvatar, updateProfile, logout } = useAuth()
+  const { user, uploadAvatar, updateProfile, logout, logoutAll } = useAuth()
   const navigate = useNavigate()
   const fileInput = useRef<HTMLInputElement>(null)
   const push = usePushNotifications()
@@ -152,6 +152,22 @@ export default function Profile() {
         className="mt-8 w-full text-center text-xs text-ink-muted underline"
       >
         Log out
+      </button>
+
+      {/* Low-stakes to the account itself (no data loss), but consequential
+          enough to every other active session that an accidental tap
+          shouldn't trigger it outright — a plain confirm is proportionate
+          here rather than a full custom dialog. */}
+      <button
+        type="button"
+        onClick={async () => {
+          if (!window.confirm('Log out of every device signed into this account?')) return
+          await logoutAll()
+          navigate('/login', { replace: true })
+        }}
+        className="mt-2 w-full text-center text-xs text-ink-muted underline"
+      >
+        Log out of all devices
       </button>
     </main>
   )

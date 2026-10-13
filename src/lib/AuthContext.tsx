@@ -24,6 +24,7 @@ type AuthState = {
   uploadAvatar: (file: File) => Promise<void>
   updateProfile: (fullName: string) => Promise<void>
   logout: () => Promise<void>
+  logoutAll: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthState | null>(null)
@@ -90,9 +91,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('unauthenticated')
   }, [])
 
+  // Revokes every refresh token on the account, not just this device's
+  // (see auth.routes.ts's /logout-all) — the lost/stolen-phone case.
+  // Still just a local logout for THIS device beyond that: there's no way
+  // to also force-close a session already active on another device mid-
+  // use, only to stop it from being able to silently refresh past its
+  // current access token's own short TTL.
+  const logoutAll = useCallback(async () => {
+    await apiFetch('/api/auth/logout-all', { method: 'POST' }).catch(() => {})
+    setAccessToken(null)
+    setUser(null)
+    setStatus('unauthenticated')
+  }, [])
+
   return (
     <AuthContext.Provider
-      value={{ status, user, requestOtp, verifyOtp, uploadAvatar, updateProfile, logout }}
+      value={{ status, user, requestOtp, verifyOtp, uploadAvatar, updateProfile, logout, logoutAll }}
     >
       {children}
     </AuthContext.Provider>
