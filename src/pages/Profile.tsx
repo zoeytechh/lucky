@@ -1,15 +1,19 @@
 import { AnimatePresence } from 'motion/react'
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ChangePinDialog from '../components/ChangePinDialog'
 import ErrorAlert from '../components/ErrorAlert'
 import { useAuth } from '../lib/AuthContext'
+import { hasPinSet } from '../lib/pinLock'
 import { usePushNotifications } from '../lib/usePushNotifications'
+import { isStandalone } from '../lib/standalone'
 
 export default function Profile() {
   const { user, uploadAvatar, updateProfile, logout, logoutAll } = useAuth()
   const navigate = useNavigate()
   const fileInput = useRef<HTMLInputElement>(null)
   const push = usePushNotifications()
+  const [changingPin, setChangingPin] = useState(false)
 
   const [fullName, setFullName] = useState(user?.fullName ?? '')
   const [preview, setPreview] = useState<string | null>(null)
@@ -142,6 +146,30 @@ export default function Profile() {
           )}
         </div>
       )}
+
+      {/* PIN setup is mandatory before App.tsx ever lets a standalone
+          session reach this page (see usePinLock), so in practice this
+          is always set by the time anyone's here — hasPinSet() is just
+          the one honest source of truth rather than assuming that. */}
+      {isStandalone() && hasPinSet() && (
+        <div className="card-raised mt-6 flex items-center justify-between gap-3 rounded-lg border border-hairline bg-ground-raised px-4 py-3">
+          <div>
+            <span className="block text-sm text-ink">App lock PIN</span>
+            <span className="block text-xs text-ink-muted">Required every time you open the app</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setChangingPin(true)}
+            className="shrink-0 rounded-full bg-ground-raised-2 px-4 py-2 font-display text-xs text-ink"
+          >
+            CHANGE
+          </button>
+        </div>
+      )}
+
+      <AnimatePresence>
+        {changingPin && <ChangePinDialog onClose={() => setChangingPin(false)} />}
+      </AnimatePresence>
 
       <button
         type="button"

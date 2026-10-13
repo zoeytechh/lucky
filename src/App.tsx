@@ -5,12 +5,15 @@ import AnimatedBalance from './components/AnimatedBalance'
 import IosInstallBanner from './components/IosInstallBanner'
 import MobileMenu from './components/MobileMenu'
 import PartyMascot from './components/PartyMascot'
+import PinLockScreen from './components/PinLockScreen'
+import PinSetup from './components/PinSetup'
 import PullToRefresh from './components/PullToRefresh'
 import SplashLoader from './components/SplashLoader'
 import { WalletIcon } from './components/Icons'
 import { useAuth } from './lib/AuthContext'
 import { CommentSocketProvider } from './lib/CommentSocketContext'
 import { DrawSocketProvider } from './lib/DrawSocketContext'
+import { usePinLock } from './lib/usePinLock'
 import { useWallet } from './lib/WalletContext'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -37,6 +40,7 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const location = useLocation()
+  const pinLock = usePinLock()
 
   if (status === 'loading') {
     return <SplashLoader />
@@ -48,6 +52,18 @@ function App() {
 
   if (user?.role === 'USER' && (!user.avatarUrl || !user.fullName)) {
     return <Navigate to="/onboarding" replace />
+  }
+
+  // Device-level app lock (installed/standalone only — see usePinLock).
+  // Checked after the real auth/onboarding gates above, not instead of
+  // them: this answers "is whoever's holding this device right now
+  // allowed to use it," a different question from "is this a genuine,
+  // logged-in, onboarded account."
+  if (pinLock.needsSetup) {
+    return <PinSetup onDone={pinLock.markSetupDone} />
+  }
+  if (!pinLock.unlocked) {
+    return <PinLockScreen onUnlock={pinLock.unlock} />
   }
 
   return (

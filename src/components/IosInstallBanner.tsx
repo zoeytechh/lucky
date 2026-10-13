@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useState } from 'react'
+import { isStandalone } from '../lib/standalone'
 import { IosShareIcon } from './Icons'
 
 const DISMISS_KEY = 'lucky:ios-install-dismissed'
@@ -14,11 +15,6 @@ function isIosSafari(): boolean {
   const isIos = /iphone|ipad|ipod/i.test(ua)
   const isSafari = /safari/i.test(ua) && !/crios|fxios|edgios|opios/i.test(ua)
   return isIos && isSafari
-}
-
-function isStandalone(): boolean {
-  const nav = window.navigator as Navigator & { standalone?: boolean }
-  return nav.standalone === true || window.matchMedia('(display-mode: standalone)').matches
 }
 
 export default function IosInstallBanner() {
