@@ -73,6 +73,102 @@ button:not(:disabled),
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.22);
 }
 
+/* The app loader: a spinning ring whose colors cycle, with the mascot +
+   wordmark held steady at its center — used wherever a spinner (not a
+   content skeleton) is the right loading cue: app boot/reload
+   (SplashLoader) and an in-flight backend action (Loader).
+   Registering each color stop as its own animatable value is what lets
+   a plain hue-rotate() can't: the cycle only ever passes through colors
+   explicitly listed in the keyframes below (gold, coral, green, the
+   app's own cream-white) — blue is never reachable by construction, not
+   filtered out after the fact. A full hue-rotate(0→360deg) sweep was
+   tried first and rejected for exactly this reason: it mathematically
+   has to pass through blue, and this palette's green already sits close
+   to that boundary. */
+@property --loader-c1 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #e8b63e;
+}
+@property --loader-c2 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #ff8a7e;
+}
+@property --loader-c3 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #7fd9a6;
+}
+
+.loader-stage {
+  position: relative;
+  display: inline-block;
+}
+.loader-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  --loader-c1: #e8b63e;
+  --loader-c2: #ff8a7e;
+  --loader-c3: #7fd9a6;
+  background: conic-gradient(
+    from 0deg,
+    var(--loader-c1) 0deg,
+    var(--loader-c2) 120deg,
+    var(--loader-c3) 240deg,
+    var(--loader-c1) 360deg
+  );
+  animation:
+    loader-spin 2.1s linear infinite,
+    loader-cycle-c1 8s linear infinite,
+    loader-cycle-c2 8s linear infinite -2.67s,
+    loader-cycle-c3 8s linear infinite -5.33s;
+}
+.loader-face {
+  position: absolute;
+  border-radius: 9999px;
+  background: var(--color-ground-raised);
+  box-shadow: 0 0 0 1px rgba(244, 239, 222, 0.08) inset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.loader-word {
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+@keyframes loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes loader-cycle-c1 {
+  0% { --loader-c1: #e8b63e; }
+  25% { --loader-c1: #ff8a7e; }
+  50% { --loader-c1: #7fd9a6; }
+  75% { --loader-c1: #f4efde; }
+  100% { --loader-c1: #e8b63e; }
+}
+@keyframes loader-cycle-c2 {
+  0% { --loader-c2: #e8b63e; }
+  25% { --loader-c2: #ff8a7e; }
+  50% { --loader-c2: #7fd9a6; }
+  75% { --loader-c2: #f4efde; }
+  100% { --loader-c2: #e8b63e; }
+}
+@keyframes loader-cycle-c3 {
+  0% { --loader-c3: #e8b63e; }
+  25% { --loader-c3: #ff8a7e; }
+  50% { --loader-c3: #7fd9a6; }
+  75% { --loader-c3: #f4efde; }
+  100% { --loader-c3: #e8b63e; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
