@@ -81,6 +81,12 @@ export default function Draw() {
   const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([])
   const [entering, setEntering] = useState(false)
   const [error, setError] = useState<ApiError | Error | null>(null)
+  // Separate from `error` above (the Enter-draw action's own error) — a
+  // failed *page load* used to leave `round` stuck at null forever with
+  // nothing on screen but an endless skeleton and no way to recover short
+  // of a manual reload. This is what lets the skeleton give way to a real,
+  // retryable error instead.
+  const [loadError, setLoadError] = useState<ApiError | Error | null>(null)
   const [confirmation, setConfirmation] = useState<string | null>(null)
   // Gates the actual entry behind an explicit yes/no — a real-money
   // charge shouldn't fire off a single accidental tap. See the
@@ -109,14 +115,19 @@ export default function Draw() {
   const { progress, pendingSettlement, revealWinnerSlot, enqueueSettlement } = useDrawSocketContext()
 
   const load = useCallback(async () => {
-    const [roundRes, myEntriesRes, recentRes] = await Promise.all([
-      apiFetch('/api/draw/current'),
-      apiFetch('/api/draw/entries?limit=5'),
-      apiFetch('/api/draw/recent-entries?pageSize=3'),
-    ])
-    setRound(roundRes)
-    setMyEntries(myEntriesRes.entries)
-    setRecentEntries(recentRes.entries)
+    try {
+      const [roundRes, myEntriesRes, recentRes] = await Promise.all([
+        apiFetch('/api/draw/current'),
+        apiFetch('/api/draw/entries?limit=5'),
+        apiFetch('/api/draw/recent-entries?pageSize=3'),
+      ])
+      setRound(roundRes)
+      setMyEntries(myEntriesRes.entries)
+      setRecentEntries(recentRes.entries)
+      setLoadError(null)
+    } catch (err) {
+      setLoadError(err instanceof Error ? err : new Error('Could not load the draw'))
+    }
   }, [])
 
   useEffect(() => {
@@ -381,6 +392,10 @@ export default function Draw() {
             Half of everyone else gets their stake back. The rest fund the winner.
           </p>
         </>
+      ) : loadError ? (
+        <div className="py-6">
+          <ErrorAlert error={loadError} onRetry={load} />
+        </div>
       ) : (
         <DrawTopSkeleton />
       )}

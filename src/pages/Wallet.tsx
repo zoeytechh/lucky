@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import AnimatedBalance from '../components/AnimatedBalance'
+import ErrorAlert from '../components/ErrorAlert'
 import Paginator from '../components/Paginator'
 import Skeleton from '../components/Skeleton'
 import { apiFetch } from '../lib/api'
@@ -31,11 +32,20 @@ export default function Wallet() {
   const [transactions, setTransactions] = useState<Transaction[] | null>(null)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+  // Without this, a failed fetch used to leave `transactions` at null
+  // forever — the skeleton rows just stayed there indefinitely, with no
+  // error shown and no way to recover short of a manual reload.
+  const [loadError, setLoadError] = useState<Error | null>(null)
 
   const loadPage = useCallback(async (p: number) => {
-    const res = await apiFetch(`/api/wallet/transactions?page=${p}&pageSize=${PAGE_SIZE}`)
-    setTransactions(res.transactions)
-    setTotal(res.total)
+    try {
+      const res = await apiFetch(`/api/wallet/transactions?page=${p}&pageSize=${PAGE_SIZE}`)
+      setTransactions(res.transactions)
+      setTotal(res.total)
+      setLoadError(null)
+    } catch (err) {
+      setLoadError(err instanceof Error ? err : new Error('Could not load your transactions'))
+    }
   }, [])
 
   // WalletContext only fetches on login/profile-complete — nothing else
@@ -96,7 +106,11 @@ export default function Wallet() {
         Recent activity
       </h2>
 
-      {transactions === null ? (
+      {transactions === null && loadError ? (
+        <div className="mt-3">
+          <ErrorAlert error={loadError} onRetry={() => loadPage(page)} />
+        </div>
+      ) : transactions === null ? (
         <div className="mt-3 flex flex-col gap-2">
           {Array.from({ length: 5 }, (_, i) => (
             <div

@@ -33,14 +33,24 @@ export default function Admin() {
   const [error, setError] = useState<Error | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  // Separate from `error` above (the send-payout action's own error) — a
+  // failed page load used to leave balanceMinor/sends stuck at null
+  // forever, skeletons showing with no error and no way to recover short
+  // of a manual reload.
+  const [loadError, setLoadError] = useState<Error | null>(null)
 
   const load = useCallback(async () => {
-    const [wallet, sendsRes] = await Promise.all([
-      apiFetch('/api/admin/wallet'),
-      apiFetch('/api/admin/sends'),
-    ])
-    setBalanceMinor(wallet.balanceMinor)
-    setSends(sendsRes.sends)
+    try {
+      const [wallet, sendsRes] = await Promise.all([
+        apiFetch('/api/admin/wallet'),
+        apiFetch('/api/admin/sends'),
+      ])
+      setBalanceMinor(wallet.balanceMinor)
+      setSends(sendsRes.sends)
+      setLoadError(null)
+    } catch (err) {
+      setLoadError(err instanceof Error ? err : new Error('Could not load admin data'))
+    }
   }, [])
 
   useEffect(() => {
@@ -85,6 +95,12 @@ export default function Admin() {
   return (
     <main className="mx-auto max-w-sm px-5 py-8 lg:max-w-2xl">
       <h1 className="font-display text-xl uppercase tracking-wide text-ink">Admin</h1>
+
+      {loadError && balanceMinor === null && (
+        <div className="mt-4">
+          <ErrorAlert error={loadError} onRetry={load} />
+        </div>
+      )}
 
       <div className="card-raised mt-5 rounded-xl bg-ground-raised px-5 py-6 text-center">
         <span className="block text-[11px] tracking-wider text-ink-muted">

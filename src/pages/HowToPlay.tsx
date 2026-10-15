@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import ErrorAlert from '../components/ErrorAlert'
 import { TrophyIcon } from '../components/Icons'
 import Skeleton from '../components/Skeleton'
 import { apiFetch } from '../lib/api'
@@ -32,10 +33,22 @@ function Section({ title, children }: { title: string; children: React.ReactNode
  */
 export default function HowToPlay() {
   const [round, setRound] = useState<RoundInfo | null>(null)
+  // Without this, a failed fetch used to leave `round` at null forever —
+  // the handful of inline numbers below just stayed stuck as skeletons
+  // indefinitely, with no error shown and no way to recover short of a
+  // manual reload.
+  const [loadError, setLoadError] = useState<Error | null>(null)
+
+  const load = useCallback(() => {
+    setLoadError(null)
+    apiFetch('/api/draw/current')
+      .then(setRound)
+      .catch((err) => setLoadError(err instanceof Error ? err : new Error('Could not load')))
+  }, [])
 
   useEffect(() => {
-    apiFetch('/api/draw/current').then(setRound)
-  }, [])
+    load()
+  }, [load])
 
   // This page is almost entirely static explainer copy — sections 3-5
   // below never touch `round` at all. Only a handful of numbers in
@@ -52,6 +65,12 @@ export default function HowToPlay() {
       <p className="mt-1 text-xs text-ink-muted">
         Everything that happens between paying your entry fee and seeing money in your wallet.
       </p>
+
+      {loadError && !round && (
+        <div className="mt-4">
+          <ErrorAlert error={loadError} onRetry={load} />
+        </div>
+      )}
 
       <Section title="1. Enter a round">
         <p>

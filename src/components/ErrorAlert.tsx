@@ -32,9 +32,14 @@ const variants: Record<string, Variant> = {
 export default function ErrorAlert({
   error,
   action,
+  onRetry,
 }: {
   error: ApiError | Error | string
   action?: { label: string; to: string }
+  /** For a failed page-load (not a form submit) — lets the caller re-run
+   * whatever fetch failed without a full reload. Separate from `action`
+   * (a Link elsewhere) since a retry is a callback, not a navigation. */
+  onRetry?: () => void
 }) {
   const code = typeof error === 'object' && 'code' in error ? error.code : undefined
   const message = typeof error === 'string' ? error : error.message
@@ -62,6 +67,15 @@ export default function ErrorAlert({
           <Link to={action.to} className="mt-1.5 inline-block text-xs text-primary underline">
             {action.label}
           </Link>
+        )}
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-1.5 block text-xs text-primary underline"
+          >
+            Try again
+          </button>
         )}
       </div>
     </motion.div>
