@@ -12,7 +12,7 @@ import PulsingLoader from './PulsingLoader'
  */
 export default function SplashLoader() {
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-ground px-6">
+    <div className="fixed inset-0 flex items-center justify-center bg-ground px-6">
       <PulsingLoader mascotSize={36} wordSize={14} />
     </div>
   )
