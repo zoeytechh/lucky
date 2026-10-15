@@ -46,7 +46,13 @@ export default function IosInstallBanner() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 60, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-          className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-sm items-center gap-3 rounded-2xl border border-primary/30 bg-ground-raised px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.35)]"
+          // bottom offset adds the iPhone home-indicator's safe-area inset
+          // on top of the usual 1rem — index.html's viewport-fit=cover
+          // already lets content extend under it, so without this the
+          // banner would sit flush against (or under) the gesture bar.
+          // env() resolves to 0 on anything without a safe-area concept
+          // (Android, desktop), so this is a no-op there.
+          className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-sm items-center gap-3 rounded-2xl border border-primary/30 bg-ground-raised px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.35)]"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-ink">
             <IosShareIcon size={18} />

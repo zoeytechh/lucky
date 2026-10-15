@@ -120,19 +120,27 @@ export default function Profile() {
         </button>
       </form>
 
-      {push.supported && (
+      {/* Shown even when the Push API itself isn't available yet — iOS
+          restricts it to an installed PWA (see usePushNotifications'
+          needsInstallForPush), and an iOS user who hasn't installed
+          should still see this feature exists and how to get it, the
+          same way an Android user always can, rather than the whole
+          section just silently not being there. */}
+      {(push.supported || push.needsInstallForPush) && (
         <div className="card-raised mt-6 flex items-center justify-between gap-3 rounded-lg border border-hairline bg-ground-raised px-4 py-3">
           <div>
             <span className="block text-sm text-ink">Push notifications</span>
             <span className="block text-xs text-ink-muted">
-              {push.permission === 'denied'
-                ? 'Blocked in your browser settings'
-                : push.subscribed
-                  ? 'A winner is picked or a round is almost full'
-                  : 'Get notified even when the app is closed'}
+              {push.needsInstallForPush
+                ? 'Install Lucky You to your home screen to enable this'
+                : push.permission === 'denied'
+                  ? 'Blocked in your browser settings'
+                  : push.subscribed
+                    ? 'A winner is picked or a round is almost full'
+                    : 'Get notified even when the app is closed'}
             </span>
           </div>
-          {push.permission !== 'denied' && (
+          {!push.needsInstallForPush && push.permission !== 'denied' && (
             <button
               type="button"
               onClick={() => (push.subscribed ? push.disable() : push.enable())}
@@ -146,6 +154,13 @@ export default function Profile() {
           )}
         </div>
       )}
+      <AnimatePresence>
+        {push.error && (
+          <div className="mt-2">
+            <ErrorAlert error={push.error} />
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* PIN setup is mandatory before App.tsx ever lets a standalone
           session reach this page (see usePinLock), so in practice this

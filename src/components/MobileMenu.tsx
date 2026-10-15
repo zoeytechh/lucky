@@ -35,7 +35,12 @@ export default function MobileMenu({
             transition={{ duration: 0.2 }}
           />
           <motion.div
-            className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col gap-1 bg-ground-raised p-5 sm:hidden"
+            // pb- extra: this drawer spans the full height, so its own
+            // bottom edge is exactly where the iPhone home-indicator's
+            // safe area sits — without it the last nav link would end up
+            // flush against (or under) the gesture bar. No-op anywhere
+            // without a safe-area concept.
+            className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col gap-1 bg-ground-raised p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:hidden"
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}

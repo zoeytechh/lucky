@@ -106,7 +106,11 @@ export default function UpdatePrompt() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          className="fixed inset-x-4 bottom-4 z-50 flex items-center justify-between gap-3 rounded-xl bg-ground-raised-2 px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.35)] sm:inset-x-auto sm:right-4 sm:max-w-xs"
+          // Same reasoning as IosInstallBanner's own bottom offset — keeps
+          // this off the iPhone home-indicator's gesture area instead of
+          // sitting flush against (or under) it; a no-op anywhere without
+          // a safe-area concept.
+          className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 flex items-center justify-between gap-3 rounded-xl bg-ground-raised-2 px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.35)] sm:inset-x-auto sm:right-4 sm:max-w-xs"
         >
           <span className="text-xs font-bold leading-snug text-ink">
             A new version of Lucky You is ready.
