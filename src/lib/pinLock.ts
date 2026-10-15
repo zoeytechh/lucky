@@ -8,6 +8,27 @@
 // Lucky You itself.
 const PIN_STORAGE_KEY = 'lucky:pin-lock'
 
+// Session-scoped, deliberately separate from the hash above: survives a
+// reload within the same tab/PWA process (so the PIN isn't re-asked on
+// every reload — see usePinLock.ts), but disappears the moment the OS
+// actually ends that process, same as the rest of sessionStorage.
+const UNLOCKED_FLAG_KEY = 'lucky:pin-unlocked'
+
+export function readUnlockedFlag(): boolean {
+  try {
+    return sessionStorage.getItem(UNLOCKED_FLAG_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function writeUnlockedFlag(value: boolean): void {
+  try {
+    if (value) sessionStorage.setItem(UNLOCKED_FLAG_KEY, '1')
+    else sessionStorage.removeItem(UNLOCKED_FLAG_KEY)
+  } catch {}
+}
+
 type StoredPin = { saltHex: string; hashHex: string }
 
 function bufferToHex(buf: ArrayBuffer | Uint8Array): string {
@@ -65,4 +86,8 @@ export function clearPin(): void {
   try {
     localStorage.removeItem(PIN_STORAGE_KEY)
   } catch {}
+  // A forgotten PIN invalidates any already-unlocked session too — there's
+  // no reason the device should stay "unlocked" against a PIN that was
+  // just wiped.
+  writeUnlockedFlag(false)
 }
