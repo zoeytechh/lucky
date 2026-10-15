@@ -39,6 +39,12 @@ const LAST_SEEN_ROUND_KEY = 'lucky_last_announced_round_id'
 // reopening the app hours later doesn't resurface old news.
 const CATCH_UP_RECENCY_MS = 3 * 60 * 1000
 
+// How full a round has to be before the "almost full" nudge fires — kept
+// as one constant rather than two separately-typed 0.9s (the catch-up
+// check on mount, below, and the live socket effect further down) so the
+// two paths can't silently drift to different thresholds.
+const ALMOST_FULL_RATIO = 0.7
+
 /**
  * Owns the one app-wide connection to the public round socket and
  * everything downstream of it: the ring-driving suspense/reveal sequence
@@ -141,7 +147,7 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
           return
         }
         if (current.roundId && current.entryCount < current.capacity) {
-          const threshold = Math.floor(current.capacity * 0.9)
+          const threshold = Math.floor(current.capacity * ALMOST_FULL_RATIO)
           if (
             current.entryCount >= threshold &&
             !almostFullNotifiedRoundIds.current.has(current.roundId)
@@ -195,12 +201,12 @@ export function DrawSocketProvider({ children }: { children: ReactNode }) {
     if (settled) enqueueSettlement(settled)
   }, [settled, enqueueSettlement])
 
-  // Fires once per round, the first time entryCount crosses 90% full.
+  // Fires once per round, the first time entryCount crosses ALMOST_FULL_RATIO full.
   useEffect(() => {
     if (!progress) return
     if (almostFullNotifiedRoundIds.current.has(progress.roundId)) return
     if (progress.entryCount >= progress.capacity) return
-    const threshold = Math.floor(progress.capacity * 0.9)
+    const threshold = Math.floor(progress.capacity * ALMOST_FULL_RATIO)
     if (progress.entryCount < threshold) return
     almostFullNotifiedRoundIds.current.add(progress.roundId)
     setAlmostFull(progress)
