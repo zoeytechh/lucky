@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'motion/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { clearPin, verifyPin } from '../lib/pinLock'
 import { useAuth } from '../lib/AuthContext'
 
@@ -9,9 +9,7 @@ export default function PinLockScreen({ onUnlock }: { onUnlock: () => void }) {
   const [error, setError] = useState<string | null>(null)
   const [checking, setChecking] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (pin.length !== 4) return
+  async function verify() {
     setChecking(true)
     setError(null)
     const ok = await verifyPin(pin)
@@ -22,6 +20,22 @@ export default function PinLockScreen({ onUnlock }: { onUnlock: () => void }) {
       setPin('')
       setChecking(false)
     }
+  }
+
+  // Auto-submits the instant the 4th digit lands — a real PIN entry
+  // shouldn't need an extra tap on a button once the code is already
+  // typed in full, the same way every standard PIN/OTP input behaves.
+  // The button below stays as a fallback (keyboard Enter, assistive
+  // tech, or just someone who prefers to tap it), not removed outright.
+  useEffect(() => {
+    if (pin.length === 4 && !checking) verify()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pin])
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (pin.length !== 4 || checking) return
+    verify()
   }
 
   // Not a password reset — the PIN is purely local, so there's nothing

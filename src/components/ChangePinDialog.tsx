@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { setPin, verifyPin } from '../lib/pinLock'
 import { useFocusTrap } from '../lib/useFocusTrap'
 
@@ -22,9 +22,7 @@ export default function ChangePinDialog({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  async function handleOldSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (oldPin.length !== 4) return
+  async function verifyOld() {
     setBusy(true)
     setError(null)
     const ok = await verifyPin(oldPin)
@@ -37,6 +35,12 @@ export default function ChangePinDialog({ onClose }: { onClose: () => void }) {
     setStep('new')
   }
 
+  function handleOldSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (oldPin.length !== 4 || busy) return
+    verifyOld()
+  }
+
   function handleNewSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (newPin.length !== 4) return
@@ -44,9 +48,7 @@ export default function ChangePinDialog({ onClose }: { onClose: () => void }) {
     setStep('confirm')
   }
 
-  async function handleConfirmSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (confirmPin.length !== 4) return
+  async function confirmAndSave() {
     if (confirmPin !== newPin) {
       setError("PINs don't match — try again")
       setConfirmPin('')
@@ -56,6 +58,31 @@ export default function ChangePinDialog({ onClose }: { onClose: () => void }) {
     await setPin(newPin)
     onClose()
   }
+
+  function handleConfirmSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (confirmPin.length !== 4 || busy) return
+    confirmAndSave()
+  }
+
+  // Auto-advance the instant 4 digits land, on every step — no reason to
+  // make someone tap NEXT/SAVE when the code they just typed is already
+  // complete.
+  useEffect(() => {
+    if (step === 'old' && oldPin.length === 4 && !busy) verifyOld()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oldPin, step])
+  useEffect(() => {
+    if (step === 'new' && newPin.length === 4) {
+      setError(null)
+      setStep('confirm')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newPin, step])
+  useEffect(() => {
+    if (step === 'confirm' && confirmPin.length === 4 && !busy) confirmAndSave()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [confirmPin, step])
 
   const inputClass =
     'mt-5 w-full rounded-lg border border-hairline bg-ground-raised-2 px-4 py-3 text-center text-2xl tracking-[0.5em] text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none'

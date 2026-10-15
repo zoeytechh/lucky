@@ -12,10 +12,15 @@ import { motion } from 'motion/react'
 export default function PartyMascot({
   size = 22,
   dance = false,
+  pulse = false,
   speed = 1,
 }: {
   size?: number
   dance?: boolean
+  /** The app loader's own motion — a slow scale/opacity breathe, no
+   * sway or rotation. Mutually exclusive with `dance`; `dance` wins if
+   * both are somehow set. */
+  pulse?: boolean
   /** Multiplies the loop's duration — 1 is the normal nav-sway pace, <1
    * speeds it up (same gentle bounce shape, just a quicker tempo) without
    * switching to `dance`'s bigger, more exaggerated motion. */
@@ -35,9 +40,15 @@ export default function PartyMascot({
         // subdued for "someone just won real money."
         dance
           ? { y: [0, -9, 0, -5, 0], rotate: [-22, 22, -16, 16, 0], scale: [1, 1.1, 1, 1.06, 1] }
-          : { y: [0, -3, 0], rotate: [-6, 6, -6] }
+          : pulse
+            ? { scale: [1, 1.18, 1], opacity: [0.75, 1, 0.75] }
+            : { y: [0, -3, 0], rotate: [-6, 6, -6] }
       }
-      transition={{ duration: (dance ? 0.85 : 1.4) * speed, repeat: Infinity, ease: 'easeInOut' }}
+      transition={{
+        duration: (dance ? 0.85 : pulse ? 1.3 : 1.4) * speed,
+        repeat: Infinity,
+        ease: 'easeInOut',
+      }}
     >
       <circle cx="11" cy="4.6" r="2.1" fill="currentColor" />
       <path

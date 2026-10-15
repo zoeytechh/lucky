@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'motion/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { setPin } from '../lib/pinLock'
 
 /**
@@ -22,9 +22,7 @@ export default function PinSetup({ onDone }: { onDone: () => void }) {
     setStep('confirm')
   }
 
-  async function handleConfirmSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (confirmPin.length !== 4) return
+  async function confirmAndSave() {
     if (confirmPin !== pin) {
       setError("PINs don't match — try again")
       setConfirmPin('')
@@ -34,6 +32,24 @@ export default function PinSetup({ onDone }: { onDone: () => void }) {
     await setPin(pin)
     onDone()
   }
+
+  function handleConfirmSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (confirmPin.length !== 4 || saving) return
+    confirmAndSave()
+  }
+
+  // Auto-advance the instant 4 digits land, on both steps — no reason to
+  // make someone tap CONTINUE/CONFIRM when the code they just typed is
+  // already complete.
+  useEffect(() => {
+    if (step === 'create' && pin.length === 4) setStep('confirm')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pin, step])
+  useEffect(() => {
+    if (step === 'confirm' && confirmPin.length === 4 && !saving) confirmAndSave()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [confirmPin, step])
 
   return (
     <main className="flex min-h-screen items-center justify-center px-5">
