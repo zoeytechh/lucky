@@ -3,9 +3,15 @@ import { NavLink } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 
 // BottomTabBar already covers Draw/Leaderboard/Wallet/Profile — this
-// drawer is for everything else, so it doesn't list the same destination
-// twice under two different mobile nav affordances.
-const links = [{ to: '/how-to-play', label: 'How to Play', end: false }]
+// drawer is for everything else: pages reachable from any screen, not
+// just via in-page buttons on Draw itself (Recent Entries, Winners,
+// Comments all otherwise require being on Draw first).
+const links = [
+  { to: '/draw/recent', label: 'Recent Entries', end: false },
+  { to: '/draw/winners', label: 'Winners', end: false },
+  { to: '/draw/comments', label: 'Comments', end: false },
+  { to: '/how-to-play', label: 'How to Play', end: false },
+]
 
 export default function MobileMenu({
   open,
