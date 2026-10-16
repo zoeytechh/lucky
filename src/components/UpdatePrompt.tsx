@@ -109,8 +109,9 @@ export default function UpdatePrompt() {
           // Same reasoning as IosInstallBanner's own bottom offset — keeps
           // this off the iPhone home-indicator's gesture area instead of
           // sitting flush against (or under) it; a no-op anywhere without
-          // a safe-area concept.
-          className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 flex items-center justify-between gap-3 rounded-xl bg-ground-raised-2 px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.35)] sm:inset-x-auto sm:right-4 sm:max-w-xs"
+          // a safe-area concept. The larger mobile offset also clears
+          // BottomTabBar, which only exists below the sm: breakpoint.
+          className="fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 flex items-center justify-between gap-3 rounded-xl bg-ground-raised-2 px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.35)] sm:inset-x-auto sm:bottom-[calc(1rem+env(safe-area-inset-bottom))] sm:right-4 sm:max-w-xs"
         >
           <span className="text-xs font-bold leading-snug text-ink">
             A new version of Lucky You is ready.

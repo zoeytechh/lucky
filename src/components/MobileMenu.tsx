@@ -2,13 +2,10 @@ import { AnimatePresence, motion } from 'motion/react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 
-const links = [
-  { to: '/', label: 'Draw', end: true },
-  { to: '/wallet', label: 'Wallet', end: false },
-  { to: '/leaderboard', label: 'Leaderboard', end: false },
-  { to: '/how-to-play', label: 'How to Play', end: false },
-  { to: '/profile', label: 'Profile', end: false },
-]
+// BottomTabBar already covers Draw/Leaderboard/Wallet/Profile — this
+// drawer is for everything else, so it doesn't list the same destination
+// twice under two different mobile nav affordances.
+const links = [{ to: '/how-to-play', label: 'How to Play', end: false }]
 
 export default function MobileMenu({
   open,

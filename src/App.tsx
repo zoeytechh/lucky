@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'motion/react'
 import AnimatedBalance from './components/AnimatedBalance'
+import BottomTabBar from './components/BottomTabBar'
 import IosInstallBanner from './components/IosInstallBanner'
 import MobileMenu from './components/MobileMenu'
 import PartyMascot from './components/PartyMascot'
@@ -69,7 +70,7 @@ function App() {
   return (
     <CommentSocketProvider>
       <DrawSocketProvider>
-        <div className="min-h-screen bg-ground font-body text-ink">
+        <div className="min-h-screen bg-ground pb-[calc(4rem+env(safe-area-inset-bottom))] font-body text-ink sm:pb-0">
           <nav className="sticky top-0 z-20 flex items-center justify-between border-b border-hairline bg-ground-raised px-5 py-3.5">
             <div className="flex items-center gap-6">
               <button
@@ -145,6 +146,7 @@ function App() {
           </motion.div>
 
           <IosInstallBanner />
+          <BottomTabBar />
         </div>
       </DrawSocketProvider>
     </CommentSocketProvider>

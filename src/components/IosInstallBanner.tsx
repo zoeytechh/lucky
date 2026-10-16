@@ -51,8 +51,10 @@ export default function IosInstallBanner() {
           // already lets content extend under it, so without this the
           // banner would sit flush against (or under) the gesture bar.
           // env() resolves to 0 on anything without a safe-area concept
-          // (Android, desktop), so this is a no-op there.
-          className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-sm items-center gap-3 rounded-2xl border border-primary/30 bg-ground-raised px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.35)]"
+          // (Android, desktop), so this is a no-op there. The mobile
+          // offset also clears BottomTabBar (sm:hidden, so irrelevant at
+          // the sm: breakpoint where this reverts to the plain 1rem gap).
+          className="fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-sm items-center gap-3 rounded-2xl border border-primary/30 bg-ground-raised px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.35)] sm:bottom-[calc(1rem+env(safe-area-inset-bottom))]"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-ink">
             <IosShareIcon size={18} />

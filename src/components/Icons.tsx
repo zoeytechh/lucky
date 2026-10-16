@@ -136,6 +136,34 @@ export function CheckCircleIcon({ size = 18 }: { size?: number }) {
   )
 }
 
+export function PersonIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M3 15.5a6 6 0 0 1 12 0"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+export function TicketIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path
+        d="M2 7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2 1.5 1.5 0 0 0 0 4 2 2 0 0 1-2 2H4a2 2 0 0 1-2-2 1.5 1.5 0 0 0 0-4Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M11 5.5v7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="1.6 1.6" />
+    </svg>
+  )
+}
+
 export function AlertTriangleIcon({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
