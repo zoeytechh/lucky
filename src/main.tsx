@@ -25,6 +25,7 @@ const Winners = lazy(() => import('./pages/Winners'))
 const Wallet = lazy(() => import('./pages/Wallet'))
 const Leaderboard = lazy(() => import('./pages/Leaderboard'))
 const Profile = lazy(() => import('./pages/Profile'))
+const Support = lazy(() => import('./pages/Support'))
 const Admin = lazy(() => import('./pages/Admin'))
 
 const router = createBrowserRouter([
@@ -42,6 +43,7 @@ const router = createBrowserRouter([
       { path: 'wallet', element: <Wallet /> },
       { path: 'leaderboard', element: <Leaderboard /> },
       { path: 'profile', element: <Profile /> },
+      { path: 'support', element: <Support /> },
       { path: 'admin', element: <Admin /> },
     ],
   },

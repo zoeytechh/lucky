@@ -164,6 +164,53 @@ export function TicketIcon({ size = 18 }: { size?: number }) {
   )
 }
 
+export function SupportIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="9" cy="9" r="2.6" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="m4.2 4.2 2.6 2.6M13.8 4.2l-2.6 2.6M4.2 13.8l2.6-2.6M13.8 13.8l-2.6-2.6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+export function MailIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <rect x="2" y="4" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="m2.5 5 6.5 5 6.5-5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export function WhatsAppIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path
+        d="M9 2.5a6.5 6.5 0 0 0-5.6 9.8L2.5 15.5l3.3-.9A6.5 6.5 0 1 0 9 2.5Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6.3 6.1c.2-.4.4-.4.6-.4h.4c.2 0 .4 0 .5.4.2.4.6 1.4.6 1.5.1.1.1.3 0 .4-.1.2-.2.3-.3.4-.1.1-.3.3-.2.5.2.4.8 1.2 1.6 1.7.6.4.9.5 1.1.4.2-.1.4-.3.6-.5.1-.1.3-.2.5-.1.2.1 1.1.5 1.3.6.2.1.3.2.4.3 0 .2 0 .8-.3 1.1-.3.4-1 .7-1.4.7-.4 0-1.6-.2-3-1.4-1.7-1.4-2.2-3-2.2-3.3 0-.3-.1-.6.2-1.1l.2-.2Z"
+        fill="currentColor"
+      />
+    </svg>
+  )
+}
+
 export function AlertTriangleIcon({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">

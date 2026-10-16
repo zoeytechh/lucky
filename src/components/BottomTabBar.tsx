@@ -1,16 +1,17 @@
 import { NavLink } from 'react-router-dom'
-import { PersonIcon, TicketIcon, TrophyIcon, WalletIcon } from './Icons'
+import { PersonIcon, SupportIcon, TicketIcon, TrophyIcon, WalletIcon } from './Icons'
 
 const tabs = [
   { to: '/', label: 'Draw', end: true, Icon: TicketIcon },
   { to: '/leaderboard', label: 'Top 3', end: false, Icon: TrophyIcon },
   { to: '/wallet', label: 'Wallet', end: false, Icon: WalletIcon },
+  { to: '/support', label: 'Support', end: false, Icon: SupportIcon },
   { to: '/profile', label: 'Profile', end: false, Icon: PersonIcon },
 ] as const
 
 /**
  * The mobile-only persistent bottom tab bar (Instagram/Snapchat-style) —
- * one-tap access to the four pages people actually return to constantly,
+ * one-tap access to the five pages people actually return to constantly,
  * sitting permanently on screen instead of behind the hamburger menu.
  * Everything else (How to Play, Comments, Winners, Admin) stays in
  * MobileMenu — a tab bar this size reads as cluttered past 4-5 icons,
