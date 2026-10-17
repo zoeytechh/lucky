@@ -4,8 +4,6 @@ import { useFocusTrap } from '../lib/useFocusTrap'
 
 type Props = {
   entryCostMinor: string
-  stakeMinor: string
-  feeMinor: string
   armed: boolean
   onCancel: () => void
   onConfirm: () => void
@@ -20,14 +18,7 @@ type Props = {
  * Draw's own long-lived render where a mount effect would only ever
  * fire once for the whole page instead of once per dialog open.
  */
-export default function EntryConfirmDialog({
-  entryCostMinor,
-  stakeMinor,
-  feeMinor,
-  armed,
-  onCancel,
-  onConfirm,
-}: Props) {
+export default function EntryConfirmDialog({ entryCostMinor, armed, onCancel, onConfirm }: Props) {
   const dialogRef = useFocusTrap(onCancel)
 
   return (
@@ -51,10 +42,7 @@ export default function EntryConfirmDialog({
         onClick={(e) => e.stopPropagation()}
       >
         <p className="font-display text-lg uppercase text-ink">Enter this draw?</p>
-        <p className="mt-2 text-sm text-ink-muted">
-          You'll be charged {formatNaira(entryCostMinor)} — {formatNaira(stakeMinor)} entry fee +{' '}
-          {formatNaira(feeMinor)} app charge.
-        </p>
+        <p className="mt-2 text-sm text-ink-muted">You'll be charged {formatNaira(entryCostMinor)}.</p>
         <div className="mt-5 flex gap-3">
           <button
             type="button"

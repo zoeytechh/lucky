@@ -5,9 +5,9 @@ import { motion } from 'motion/react'
 // the phone/OTP form.
 const STEPS = [
   'Fund your wallet via bank transfer or card',
-  'Enter the draw with ₦1,000 + ₦200 app fee',
+  'Enter the draw with ₦1,000',
   'Round fills, the winner is picked live',
-  "You'll either win ₦500,000, get refunded ₦1,000, or lose it, then try again",
+  "You'll either win ₦400,000, get refunded ₦800, or lose it, then try again",
   'Cash out to your bank anytime',
 ]
 

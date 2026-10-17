@@ -271,8 +271,6 @@ export default function Draw() {
             {confirmingEntry && (
               <EntryConfirmDialog
                 entryCostMinor={round.entryCostMinor}
-                stakeMinor={round.stakeMinor}
-                feeMinor={round.feeMinor}
                 armed={dialogArmed}
                 onCancel={() => setConfirmingEntry(false)}
                 onConfirm={() => {
@@ -351,11 +349,7 @@ export default function Draw() {
                 </Link>
                 .
               </p>
-            ) : (
-              <p className="mt-2 text-xs text-ink-muted">
-                {formatNaira(round.stakeMinor)} entry fee + {formatNaira(round.feeMinor)} app charge
-              </p>
-            )}
+            ) : null}
 
             <AnimatePresence>
               {error && (

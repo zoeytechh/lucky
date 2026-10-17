@@ -76,10 +76,7 @@ export default function HowToPlay() {
         <p>
           Every entry costs{' '}
           {round ? formatNaira(round.entryCostMinor) : <Skeleton className="inline-block h-3.5 w-14 align-middle" />}
-          : {round ? formatNaira(round.stakeMinor) : <Skeleton className="inline-block h-3.5 w-14 align-middle" />}{' '}
-          goes into the prize pool as your stake, and{' '}
-          {round ? formatNaira(round.feeMinor) : <Skeleton className="inline-block h-3.5 w-12 align-middle" />} is
-          the platform's app fee, kept regardless of the outcome.
+          .
         </p>
         <p>
           A round fills with exactly{' '}
