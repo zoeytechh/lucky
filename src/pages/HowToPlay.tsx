@@ -149,8 +149,8 @@ export default function HowToPlay() {
       <Section title="5. Daily leaderboard">
         <p>
           Separately from the draw, the top spenders each calendar day are ranked on the
-          Leaderboard page. The top 3 are gifted a cash prize, credited straight to their wallet,
-          funded from platform fees, never from draw stake money.
+          Leaderboard page. The top 3 split 2% of that day's platform fee revenue evenly between
+          them, credited straight to their wallet — never from draw stake money.
         </p>
       </Section>
 

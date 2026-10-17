@@ -1,9 +1,12 @@
 // Static placeholder rows — wired to the real daily leaderboard job
-// (build-order step 7) once it exists.
+// (build-order step 7) once it exists. All three show the same prize
+// amount on purpose: the agreed formula is 2% of that day's fee revenue
+// split evenly three ways, not a declining 1st/2nd/3rd tier — rank only
+// decides *who* qualifies, not how much they get.
 const TOP_THREE = [
-  { rank: 1, name: 'Tolu A.', amount: '₦14,400' },
-  { rank: 2, name: 'Kelechi O.', amount: '₦12,000' },
-  { rank: 3, name: 'Blessing N.', amount: '₦9,600' },
+  { rank: 1, name: 'Tolu A.', amount: '₦13,333' },
+  { rank: 2, name: 'Kelechi O.', amount: '₦13,333' },
+  { rank: 3, name: 'Blessing N.', amount: '₦13,333' },
 ]
 
 export default function Leaderboard() {
@@ -32,6 +35,10 @@ export default function Leaderboard() {
           </div>
         ))}
       </div>
+      <p className="mt-4 text-xs text-ink-muted">
+        Prize: 2% of today's fee revenue, split evenly between the top 3 — same amount for every
+        spot, win or tie.
+      </p>
     </main>
   )
 }
